@@ -20,5 +20,6 @@
     <EmbeddedResource Include="Migrations\0002_TelemetryVisibility.sql" />
     <EmbeddedResource Include="Migrations\0003_LocalAuthAccounts.sql" />
     <EmbeddedResource Include="Migrations\0004_SoftwareCompliance.sql" />
+    <EmbeddedResource Include="Migrations\0005_Notifications.sql" />
   </ItemGroup>
 </Project>

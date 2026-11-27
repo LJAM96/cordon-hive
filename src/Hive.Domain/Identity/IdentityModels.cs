@@ -102,6 +102,32 @@ public static class ScopeAuthorizationService
             HiveRole.Administrator,
             HiveRole.Auditor);
 
+    public static bool CanPublishNotifications(ActorIdentity actor) =>
+        !actor.IsDevice &&
+        actor.HasAnyRole(HiveRole.Supervisor, HiveRole.SoftwareAdmin, HiveRole.Administrator);
+
+    public static bool CanCancelNotification(ActorIdentity actor, string createdBySid) =>
+        !actor.IsDevice &&
+        (actor.HasRole(HiveRole.Administrator) ||
+         (actor.HasRole(HiveRole.Supervisor) &&
+          !string.IsNullOrWhiteSpace(createdBySid) &&
+          string.Equals(actor.UserSid, createdBySid, StringComparison.OrdinalIgnoreCase)));
+
+    public static bool CanCompleteNotification(ActorIdentity actor, string notificationType)
+    {
+        if (actor.IsDevice || actor.Roles.Count == 0)
+        {
+            return false;
+        }
+
+        if (string.Equals(notificationType, "SoftwareUpdate", StringComparison.OrdinalIgnoreCase))
+        {
+            return actor.HasAnyRole(HiveRole.SoftwareAdmin, HiveRole.Administrator);
+        }
+
+        return true;
+    }
+
     public static bool CanSendHeartbeat(ActorIdentity actor, Guid deviceId) =>
         actor.IsDevice &&
         actor.DeviceId == deviceId;

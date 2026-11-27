@@ -63,6 +63,7 @@ public static class HiveApiEndpoints
 
         api.MapAuthAndUserEndpoints();
         api.MapSoftwareEndpoints();
+        api.MapNotificationEndpoints();
 
         return endpoints;
     }

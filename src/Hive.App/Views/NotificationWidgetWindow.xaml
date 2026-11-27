@@ -1,0 +1,171 @@
+<Window
+    x:Class="Hive.App.Views.NotificationWidgetWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:Hive.App.Views"
+    Title="Cordon Hive Notifications">
+
+    <Grid
+        x:Name="RootGrid"
+        Background="Transparent"
+        PointerEntered="RootGrid_PointerEntered"
+        PointerMoved="RootGrid_PointerMoved">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border
+            x:Name="FlyoutPanel"
+            Grid.Row="0"
+            Visibility="Collapsed"
+            Margin="0,0,0,6"
+            Padding="12"
+            CornerRadius="8"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1">
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Spacing="1">
+                        <TextBlock
+                            Text="Cordon Hive Alerts"
+                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            x:Name="FlyoutSubtitleText"
+                            Text="0 pending actions"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <Button
+                        Grid.Column="1"
+                        Content="Collapse"
+                        Click="CollapseButton_Click"
+                        Padding="8,4"
+                        AutomationProperties.Name="Collapse Notification Flyout" />
+                </Grid>
+
+                <Border
+                    x:Name="FlyoutWarningBanner"
+                    Grid.Row="1"
+                    Visibility="Collapsed"
+                    Padding="8,4"
+                    CornerRadius="4"
+                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE7BA;" FontSize="12" />
+                        <TextBlock
+                            x:Name="FlyoutWarningText"
+                            Text="Connection offline or stale — showing cached count"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="6">
+                        <TextBlock
+                            x:Name="FlyoutEmptyText"
+                            Text="No pending notifications."
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Visibility="Visible" />
+
+                        <ItemsControl x:Name="PreviewItemsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="views:WidgetPreviewItem">
+                                    <Border
+                                        Margin="0,0,0,4"
+                                        Padding="8,6"
+                                        CornerRadius="6"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock
+                                                Text="{x:Bind Title}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                FontWeight="SemiBold"
+                                                TextTrimming="CharacterEllipsis"
+                                                MaxLines="1" />
+                                            <TextBlock
+                                                Text="{x:Bind MetaText}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                TextTrimming="CharacterEllipsis"
+                                                MaxLines="1" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Button
+                    Grid.Row="3"
+                    Content="Open Notifications"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    HorizontalAlignment="Stretch"
+                    Click="OpenNotificationsButton_Click"
+                    AutomationProperties.Name="Open Notifications" />
+            </Grid>
+        </Border>
+
+        <Button
+            x:Name="WidgetPillButton"
+            Grid.Row="1"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Padding="10,4"
+            CornerRadius="6"
+            MinWidth="76"
+            MinHeight="32"
+            Click="WidgetPillButton_Click"
+            AutomationProperties.Name="Cordon Hive Notification Widget">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <FontIcon Glyph="&#xEA8F;" FontSize="14" VerticalAlignment="Center" />
+
+                <Border
+                    x:Name="CountBadgeBorder"
+                    Visibility="Collapsed"
+                    MinWidth="18"
+                    Height="18"
+                    Padding="5,0"
+                    CornerRadius="9"
+                    Background="{ThemeResource SystemAccentColor}"
+                    VerticalAlignment="Center">
+                    <TextBlock
+                        x:Name="CountBadgeText"
+                        Foreground="White"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+                </Border>
+
+                <FontIcon
+                    x:Name="WarningIndicatorIcon"
+                    Glyph="&#xE7BA;"
+                    FontSize="13"
+                    Visibility="Collapsed"
+                    Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                    VerticalAlignment="Center"
+                    ToolTipService.ToolTip="Connection stale or offline" />
+            </StackPanel>
+        </Button>
+    </Grid>
+</Window>

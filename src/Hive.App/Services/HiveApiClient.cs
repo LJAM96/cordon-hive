@@ -301,6 +301,93 @@ public sealed class HiveApiClient : IDisposable
             $"{ProtocolConstants.ApiPrefix}/workstations/{deviceId:D}/compliance",
             cancellationToken);
 
+    public Task<ApiResult<NotificationSyncResponse>> SyncMyNotificationsAsync(
+        string? cursor,
+        CancellationToken ct = default)
+    {
+        var path = string.IsNullOrWhiteSpace(cursor)
+            ? $"{ProtocolConstants.ApiPrefix}/me/notifications"
+            : $"{ProtocolConstants.ApiPrefix}/me/notifications?cursor={Uri.EscapeDataString(cursor.Trim())}";
+        return GetJsonAsync<NotificationSyncResponse>(path, ct);
+    }
+
+    public Task<ApiResult<AdminNotificationSummaryDto>> PublishNotificationAsync(
+        CreateNotificationRequest request,
+        CancellationToken ct = default) =>
+        SendJsonAsync<CreateNotificationRequest, AdminNotificationSummaryDto>(
+            HttpMethod.Post,
+            $"{ProtocolConstants.ApiPrefix}/notifications",
+            request,
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            includeIdempotencyHeader: true,
+            ct);
+
+    public Task<ApiResult<IReadOnlyList<AdminNotificationSummaryDto>>> GetAdminNotificationsAsync(
+        CancellationToken ct = default) =>
+        GetListAsync<AdminNotificationSummaryDto>(
+            $"{ProtocolConstants.ApiPrefix}/notifications",
+            "admin notifications",
+            ct);
+
+    public Task<ApiResult<bool>> CancelNotificationAsync(
+        Guid notificationId,
+        string reason,
+        CancellationToken ct = default) =>
+        SendNoContentAsync(
+            HttpMethod.Post,
+            $"{ProtocolConstants.ApiPrefix}/notifications/{notificationId:D}/cancel",
+            new CancelNotificationRequest(reason),
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            ct,
+            idempotencyKey: Guid.NewGuid().ToString("N"));
+
+    public Task<ApiResult<bool>> RecordNotificationDeliveryAsync(
+        Guid notificationId,
+        RecordDeliveryRequest request,
+        CancellationToken ct = default) =>
+        SendNoContentAsync(
+            HttpMethod.Post,
+            $"{ProtocolConstants.ApiPrefix}/me/notifications/{notificationId:D}/delivery",
+            request,
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            ct);
+
+    public Task<ApiResult<UserNotificationDto?>> MarkNotificationReadAsync(
+        Guid notificationId,
+        long expectedVersion,
+        string idempotencyKey,
+        CancellationToken ct = default) =>
+        SendNotificationActionAsync(
+            $"{ProtocolConstants.ApiPrefix}/me/notifications/{notificationId:D}/read",
+            expectedVersion,
+            idempotencyKey,
+            ct);
+
+    public Task<ApiResult<UserNotificationDto?>> AcknowledgeNotificationAsync(
+        Guid notificationId,
+        long expectedVersion,
+        string idempotencyKey,
+        CancellationToken ct = default) =>
+        SendNotificationActionAsync(
+            $"{ProtocolConstants.ApiPrefix}/me/notifications/{notificationId:D}/ack",
+            expectedVersion,
+            idempotencyKey,
+            ct);
+
+    public Task<ApiResult<UserNotificationDto?>> CompleteNotificationAsync(
+        Guid notificationId,
+        long expectedVersion,
+        string idempotencyKey,
+        CancellationToken ct = default) =>
+        SendNotificationActionAsync(
+            $"{ProtocolConstants.ApiPrefix}/me/notifications/{notificationId:D}/complete",
+            expectedVersion,
+            idempotencyKey,
+            ct);
+
     public async Task<ApiResult<DeviceSummaryDto?>> UpdateWorkstationAssignmentAsync(
         Guid deviceId,
         UpdateAssignmentRequest request,
@@ -527,13 +614,75 @@ public sealed class HiveApiClient : IDisposable
         }
     }
 
+    private async Task<ApiResult<UserNotificationDto?>> SendNotificationActionAsync(
+        string relativePath,
+        long expectedVersion,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var effectiveKey = string.IsNullOrWhiteSpace(idempotencyKey)
+                ? Guid.NewGuid().ToString("N")
+                : idempotencyKey.Trim();
+            var payload = new NotificationActionRequest(expectedVersion);
+
+            using var response = await SendWithAuthRetryAsync(
+                () =>
+                {
+                    var message = new HttpRequestMessage(HttpMethod.Post, BuildEndpointUri(relativePath));
+                    message.Headers.Add(ProtocolConstants.CorrelationIdHeader, Guid.NewGuid().ToString("N"));
+                    message.Headers.Add(ProtocolConstants.IdempotencyKeyHeader, effectiveKey);
+                    message.Content = JsonContent.Create(payload, options: JsonOptions);
+                    return message;
+                },
+                attachBearerToken: true,
+                allowRefreshRetry: true,
+                cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return MapHttpError<UserNotificationDto?>(
+                    response.StatusCode,
+                    await SafeReadErrorAsync(response, cancellationToken).ConfigureAwait(false));
+            }
+
+            if (response.StatusCode == HttpStatusCode.NoContent || response.Content.Headers.ContentLength == 0)
+            {
+                return ApiResult<UserNotificationDto?>.Success(null, response.StatusCode);
+            }
+
+            var text = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return ApiResult<UserNotificationDto?>.Success(null, response.StatusCode);
+            }
+
+            var updated = JsonSerializer.Deserialize<UserNotificationDto>(text, JsonOptions);
+            return ApiResult<UserNotificationDto?>.Success(updated, response.StatusCode);
+        }
+        catch (HttpRequestException ex)
+        {
+            return ApiResult<UserNotificationDto?>.Failure(ApiErrorKind.Offline, $"Hive server unreachable on LAN ({ex.Message}).");
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return ApiResult<UserNotificationDto?>.Failure(ApiErrorKind.Offline, "Hive server request timed out.");
+        }
+        catch (JsonException)
+        {
+            return ApiResult<UserNotificationDto?>.Failure(ApiErrorKind.InvalidResponse, "Received invalid notification response from Hive server.");
+        }
+    }
+
     private async Task<ApiResult<bool>> SendNoContentAsync<TRequest>(
         HttpMethod method,
         string relativePath,
         TRequest payload,
         bool attachBearerToken,
         bool allowRefreshRetry,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? idempotencyKey = null)
     {
         try
         {
@@ -542,6 +691,10 @@ public sealed class HiveApiClient : IDisposable
                 {
                     var message = new HttpRequestMessage(method, BuildEndpointUri(relativePath));
                     message.Headers.Add(ProtocolConstants.CorrelationIdHeader, Guid.NewGuid().ToString("N"));
+                    if (!string.IsNullOrWhiteSpace(idempotencyKey))
+                    {
+                        message.Headers.Add(ProtocolConstants.IdempotencyKeyHeader, idempotencyKey);
+                    }
                     message.Content = JsonContent.Create(payload, options: JsonOptions);
                     return message;
                 },

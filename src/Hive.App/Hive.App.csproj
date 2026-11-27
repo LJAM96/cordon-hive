@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Cordon.Shared.Windows\Cordon.Shared.Windows.csproj" />
     <ProjectReference Include="..\Hive.Contracts\Hive.Contracts.csproj" />
     <ProjectReference Include="..\Hive.Domain\Hive.Domain.csproj" />
     <ProjectReference Include="..\Hive.Notifications\Hive.Notifications.csproj" />

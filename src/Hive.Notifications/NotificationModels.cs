@@ -18,6 +18,30 @@ public enum NotificationPriority
     Critical
 }
 
+public enum NotificationTargetType
+{
+    User,
+    Device,
+    Site,
+    AllUsers
+}
+
+public enum NotificationActionKind
+{
+    Read,
+    Acknowledge,
+    Complete
+}
+
+public enum NotificationActionStatus
+{
+    Success,
+    NotFound,
+    Conflict,
+    AlreadyCancelled,
+    IdempotentReplay
+}
+
 public sealed record NotificationRecord(
     Guid NotificationId,
     string SourceId,
@@ -28,6 +52,29 @@ public sealed record NotificationRecord(
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset? DueAtUtc,
     long Revision);
+
+public sealed record NotificationEntity(
+    Guid NotificationId,
+    string SourceId,
+    NotificationType Type,
+    NotificationPriority Priority,
+    string Title,
+    string SafeSummary,
+    NotificationTargetType TargetType,
+    string CreatedBySid,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? DueAtUtc,
+    long Revision,
+    DateTimeOffset? CancelledAtUtc = null);
+
+public sealed record NotificationDeliveryRecord(
+    Guid DeliveryId,
+    Guid NotificationId,
+    string RecipientKey,
+    Guid? DeviceId,
+    int? SessionId,
+    string Outcome,
+    DateTimeOffset RecordedAtUtc);
 
 /// <summary>
 /// Separate durable timestamps per recipient; acknowledging an update or required action
