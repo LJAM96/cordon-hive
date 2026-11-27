@@ -28,7 +28,9 @@ public sealed record Device(
     Guid? BootId,
     string? AgentVersion,
     long PolicyRevision,
-    long RowVersion);
+    long RowVersion,
+    bool ProtectedModeActive = false,
+    string? ProtectedModeReason = null);
 
 public sealed record DeviceAssignment(
     Guid AssignmentId,

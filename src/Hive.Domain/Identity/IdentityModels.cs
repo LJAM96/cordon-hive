@@ -7,6 +7,7 @@ public enum HiveRole
     SoftwareAdmin,
     SoftwareApprover,
     RemoteAccess,
+    BreakGlassCustodian,
     Administrator,
     Auditor
 }
@@ -127,6 +128,38 @@ public static class ScopeAuthorizationService
 
         return true;
     }
+
+    public static bool CanRequestRdp(ActorIdentity actor, string siteId) =>
+        !actor.IsDevice &&
+        actor.HasAnyRole(HiveRole.RemoteAccess, HiveRole.BreakGlassCustodian, HiveRole.Administrator) &&
+        actor.CanAccessSite(siteId);
+
+    public static bool CanEscrowWorkstationCredential(ActorIdentity actor, string siteId, string? assignedUserSid)
+    {
+        if (actor.IsDevice)
+        {
+            return false;
+        }
+
+        if (actor.HasAnyRole(HiveRole.BreakGlassCustodian, HiveRole.Administrator) &&
+            actor.CanAccessSite(siteId))
+        {
+            return true;
+        }
+
+        return !string.IsNullOrWhiteSpace(assignedUserSid) &&
+               actor.Roles.Count > 0 &&
+               string.Equals(actor.UserSid, assignedUserSid, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Strict custody boundary: requires explicit BreakGlassCustodian role in the target site.
+    /// Administrator, Supervisor, RemoteAccess, and Auditor have zero implicit reveal access.
+    /// </summary>
+    public static bool CanAccessBreakGlassCredential(ActorIdentity actor, string siteId) =>
+        !actor.IsDevice &&
+        actor.HasRole(HiveRole.BreakGlassCustodian) &&
+        actor.CanAccessSite(siteId);
 
     public static bool CanSendHeartbeat(ActorIdentity actor, Guid deviceId) =>
         actor.IsDevice &&

@@ -134,7 +134,9 @@ public sealed class InMemoryDeviceRepository : IDeviceRepository
         string? hostname,
         IReadOnlyList<DeviceSession> sessions,
         DateTimeOffset seenAtUtc,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool protectedModeActive = false,
+        string? protectedModeReason = null)
     {
         lock (_store.SyncRoot)
         {
@@ -148,12 +150,18 @@ public sealed class InMemoryDeviceRepository : IDeviceRepository
                 return Task.FromResult<Device?>(null);
             }
 
+            var normalizedReason = protectedModeActive
+                ? RepositoryNormalization.NormalizeOptional(protectedModeReason)
+                : null;
+
             var updated = existing with
             {
                 LastSeenUtc = seenAtUtc,
                 BootId = bootId,
                 AgentVersion = string.IsNullOrWhiteSpace(agentVersion) ? existing.AgentVersion : agentVersion.Trim(),
                 Hostname = string.IsNullOrWhiteSpace(hostname) ? existing.Hostname : hostname.Trim(),
+                ProtectedModeActive = protectedModeActive,
+                ProtectedModeReason = normalizedReason,
                 RowVersion = existing.RowVersion + 1
             };
 

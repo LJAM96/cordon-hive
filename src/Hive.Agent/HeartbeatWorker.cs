@@ -92,12 +92,15 @@ public sealed class HeartbeatWorker : BackgroundService
             ? machine.ObservedSessions
             : [new ObservedSessionDto(machine.CurrentSessionId, UserSid: null, "Active", machine.CapturedAtUtc)];
 
+        var protectedModeActive = _runtimeState.ProtectedModeActive;
         var request = new HeartbeatRequest(
             machine.BootId,
             _runtimeState.AgentVersion,
             Capabilities,
             sessions,
-            machine.Hostname);
+            machine.Hostname,
+            ProtectedModeActive: protectedModeActive,
+            ProtectedModeReason: protectedModeActive ? "Local protection lock active" : null);
 
         var endpoint = new Uri(baseUri, $"{ProtocolConstants.ApiPrefix}/agent/heartbeat");
         var httpClient = _httpClientFactory.GetOrCreateClient(state.CertificateThumbprint);

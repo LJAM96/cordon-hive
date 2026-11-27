@@ -27,6 +27,7 @@ public sealed class HiveServerFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.UseSetting("Storage:Provider", "InMemory");
         builder.UseSetting("Authentication:EnableTestingHeaderAuth", "true");
+        builder.UseSetting("EscrowVault:MasterKey", "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=");
 
         builder.ConfigureServices(services =>
         {

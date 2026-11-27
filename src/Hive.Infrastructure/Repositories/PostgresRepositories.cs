@@ -22,7 +22,9 @@ internal static class PostgresMapping
             reader.IsDBNull(9) ? null : reader.GetGuid(9),
             reader.IsDBNull(10) ? null : reader.GetString(10),
             reader.GetInt64(11),
-            reader.GetInt64(12));
+            reader.GetInt64(12),
+            reader.GetBoolean(13),
+            reader.IsDBNull(14) ? null : reader.GetString(14));
 
     public static void AddNullableParameter(NpgsqlCommand cmd, string name, object? value)
     {
@@ -35,7 +37,8 @@ public sealed class PostgresDeviceRepository : IDeviceRepository
     private const string DeviceColumns = """
         device_id, site_id, hostname, asset_number, assigned_user_sid,
         certificate_thumbprint, enrollment_state, enrolled_at_utc, last_seen_utc,
-        boot_id, agent_version, policy_revision, row_version
+        boot_id, agent_version, policy_revision, row_version,
+        protected_mode_active, protected_mode_reason
         """;
 
     private readonly NpgsqlDataSource _dataSource;
@@ -179,10 +182,16 @@ public sealed class PostgresDeviceRepository : IDeviceRepository
         string? hostname,
         IReadOnlyList<DeviceSession> sessions,
         DateTimeOffset seenAtUtc,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool protectedModeActive = false,
+        string? protectedModeReason = null)
     {
         await using var conn = await _dataSource.OpenConnectionAsync(cancellationToken);
         await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+
+        var normalizedReason = protectedModeActive
+            ? RepositoryNormalization.NormalizeOptional(protectedModeReason)
+            : null;
 
         Device? updated;
         await using (var updateCmd = conn.CreateCommand())
@@ -194,6 +203,8 @@ public sealed class PostgresDeviceRepository : IDeviceRepository
                     boot_id = @boot_id,
                     agent_version = COALESCE(@agent_version, agent_version),
                     hostname = COALESCE(@hostname, hostname),
+                    protected_mode_active = @protected_mode_active,
+                    protected_mode_reason = @protected_mode_reason,
                     row_version = row_version + 1
                 WHERE device_id = @device_id
                   AND enrollment_state = @active_state
@@ -203,6 +214,8 @@ public sealed class PostgresDeviceRepository : IDeviceRepository
             updateCmd.Parameters.AddWithValue("boot_id", bootId);
             PostgresMapping.AddNullableParameter(updateCmd, "agent_version", RepositoryNormalization.NormalizeOptional(agentVersion));
             PostgresMapping.AddNullableParameter(updateCmd, "hostname", RepositoryNormalization.NormalizeOptional(hostname));
+            updateCmd.Parameters.AddWithValue("protected_mode_active", protectedModeActive);
+            PostgresMapping.AddNullableParameter(updateCmd, "protected_mode_reason", normalizedReason);
             updateCmd.Parameters.AddWithValue("device_id", deviceId);
             updateCmd.Parameters.AddWithValue("active_state", EnrollmentState.Active.ToString());
 

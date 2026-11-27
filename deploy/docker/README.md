@@ -31,6 +31,9 @@ openssl rand -base64 48 | tr -d '\n' | docker secret create hive_jwt_signing_key
 # Initial bootstrap admin password (at least 12 chars; remove secret after first login & password change)
 printf '%s' 'REPLACE_WITH_LONG_INITIAL_PASSPHRASE' | docker secret create hive_bootstrap_admin_password -
 
+# 256-bit AES-GCM master key for P6 DFU break-glass workstation credential escrow (keep backed up separately from DB)
+openssl rand -base64 32 | tr -d '\n' | docker secret create hive_vault_master_key -
+
 # TLS certificate & private key (PEM) for Kestrel HTTPS/mTLS
 docker secret create hive_tls_cert /path/to/hive-server.crt
 docker secret create hive_tls_key /path/to/hive-server.key

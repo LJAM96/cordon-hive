@@ -76,6 +76,7 @@ if (usePostgres)
     builder.Services.AddSingleton<IUserAccountRepository, PostgresUserAccountRepository>();
     builder.Services.AddSingleton<ISoftwareRepository, PostgresSoftwareRepository>();
     builder.Services.AddSingleton<INotificationRepository, PostgresNotificationRepository>();
+    builder.Services.AddSingleton<IEscrowCredentialRepository, PostgresEscrowCredentialRepository>();
 }
 else
 {
@@ -88,7 +89,10 @@ else
     builder.Services.AddSingleton<IUserAccountRepository, InMemoryUserAccountRepository>();
     builder.Services.AddSingleton<ISoftwareRepository, InMemorySoftwareRepository>();
     builder.Services.AddSingleton<INotificationRepository, InMemoryNotificationRepository>();
+    builder.Services.AddSingleton<IEscrowCredentialRepository, InMemoryEscrowCredentialRepository>();
 }
+
+builder.Services.AddSingleton<EscrowVaultService>();
 
 var useTestingHeaderAuth = builder.Environment.IsEnvironment("Testing") &&
                            builder.Configuration.GetValue<bool>("Authentication:EnableTestingHeaderAuth");

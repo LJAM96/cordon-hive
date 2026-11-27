@@ -104,6 +104,77 @@
                 </Grid>
             </Border>
 
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="12">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Remote Access &amp; Break-Glass Custody" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.RemoteAccessScopeNote, Mode=OneWay}"
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="2" HorizontalAlignment="Right">
+                            <TextBlock
+                                Text="Break-Glass Escrow Status"
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                HorizontalAlignment="Right" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.EscrowStatusText, Mode=OneWay}"
+                                Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                HorizontalAlignment="Right"
+                                AutomationProperties.Name="Break-Glass Escrow Status" />
+                        </StackPanel>
+                    </Grid>
+
+                    <InfoBar
+                        IsOpen="{x:Bind ViewModel.IsRemoteAccessFeedbackOpen, Mode=TwoWay}"
+                        Severity="{x:Bind ViewModel.RemoteAccessFeedbackSeverity, Mode=OneWay}"
+                        Title="{x:Bind ViewModel.RemoteAccessFeedbackTitle, Mode=OneWay}"
+                        Message="{x:Bind ViewModel.RemoteAccessFeedbackMessage, Mode=OneWay}"
+                        AutomationProperties.Name="Remote Access Status Banner" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button
+                            Content="Launch LAN RDP"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Visibility="{x:Bind ViewModel.RequestRdpVisibility, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanExecuteRemoteAccessAction, Mode=OneWay}"
+                            Click="LaunchLanRdpButton_Click"
+                            AutomationProperties.Name="Launch LAN RDP" />
+                        <Button
+                            Content="Assisted RDP as User"
+                            Visibility="{x:Bind ViewModel.BreakGlassCustodyVisibility, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanExecuteBreakGlassReveal, Mode=OneWay}"
+                            Click="AssistedRdpButton_Click"
+                            AutomationProperties.Name="Assisted RDP as User" />
+                        <Button
+                            Content="Reveal for Physical Sign-In"
+                            Visibility="{x:Bind ViewModel.BreakGlassCustodyVisibility, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanExecuteBreakGlassReveal, Mode=OneWay}"
+                            Click="RevealPhysicalSignInButton_Click"
+                            AutomationProperties.Name="Reveal for Physical Sign-In" />
+                        <Button
+                            Content="Update / Rotate Escrow"
+                            Visibility="{x:Bind ViewModel.ManageEscrowVisibility, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanExecuteManageEscrow, Mode=OneWay}"
+                            Click="RotateEscrowButton_Click"
+                            AutomationProperties.Name="Update or Rotate Escrow" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <Grid ColumnSpacing="12" RowSpacing="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

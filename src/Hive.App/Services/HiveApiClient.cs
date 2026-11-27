@@ -343,6 +343,170 @@ public sealed class HiveApiClient : IDisposable
             ct,
             idempotencyKey: Guid.NewGuid().ToString("N"));
 
+    public Task<ApiResult<RdpAuthorizationResponse>> RequestRdpAsync(
+        Guid deviceId,
+        RdpRequest request,
+        CancellationToken ct = default) =>
+        SendJsonAsync<RdpRequest, RdpAuthorizationResponse>(
+            HttpMethod.Post,
+            $"{ProtocolConstants.ApiPrefix}/workstations/{deviceId:D}/rdp-request",
+            request,
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            includeIdempotencyHeader: true,
+            ct);
+
+    public Task<ApiResult<EscrowCredentialStatusDto>> GetEscrowCredentialStatusAsync(
+        Guid deviceId,
+        CancellationToken ct = default) =>
+        GetJsonAsync<EscrowCredentialStatusDto>(
+            $"{ProtocolConstants.ApiPrefix}/workstations/{deviceId:D}/escrow-credential",
+            ct);
+
+    public async Task<ApiResult<EscrowCredentialStatusDto>> UpsertEscrowCredentialAsync(
+        Guid deviceId,
+        UpsertEscrowCredentialRequest request,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var idempotencyKey = Guid.NewGuid().ToString("N");
+            using var response = await SendWithAuthRetryAsync(
+                () =>
+                {
+                    var message = new HttpRequestMessage(
+                        HttpMethod.Put,
+                        BuildEndpointUri($"{ProtocolConstants.ApiPrefix}/workstations/{deviceId:D}/escrow-credential"));
+                    message.Headers.Add(ProtocolConstants.CorrelationIdHeader, Guid.NewGuid().ToString("N"));
+                    message.Headers.Add(ProtocolConstants.IdempotencyKeyHeader, idempotencyKey);
+                    message.Content = JsonContent.Create(request, options: JsonOptions);
+                    return message;
+                },
+                attachBearerToken: true,
+                allowRefreshRetry: true,
+                ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return MapHttpError<EscrowCredentialStatusDto>(
+                    response.StatusCode,
+                    await SafeReadErrorAsync(response, ct).ConfigureAwait(false));
+            }
+
+            if (response.StatusCode == HttpStatusCode.NoContent || response.Content.Headers.ContentLength == 0)
+            {
+                return ApiResult<EscrowCredentialStatusDto>.Success(
+                    new EscrowCredentialStatusDto(
+                        deviceId,
+                        HasEscrowedCredential: true,
+                        AccountUsername: request.AccountUsername.Trim(),
+                        UpdatedBySid: null,
+                        UpdatedAtUtc: DateTimeOffset.UtcNow,
+                        KeyVersion: 1),
+                    response.StatusCode);
+            }
+
+            var text = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return ApiResult<EscrowCredentialStatusDto>.Success(
+                    new EscrowCredentialStatusDto(
+                        deviceId,
+                        HasEscrowedCredential: true,
+                        AccountUsername: request.AccountUsername.Trim(),
+                        UpdatedBySid: null,
+                        UpdatedAtUtc: DateTimeOffset.UtcNow,
+                        KeyVersion: 1),
+                    response.StatusCode);
+            }
+
+            var status = JsonSerializer.Deserialize<EscrowCredentialStatusDto>(text, JsonOptions);
+            if (status is null)
+            {
+                return ApiResult<EscrowCredentialStatusDto>.Failure(
+                    ApiErrorKind.InvalidResponse,
+                    "Empty escrow credential status response from Hive server.");
+            }
+
+            return ApiResult<EscrowCredentialStatusDto>.Success(status, response.StatusCode);
+        }
+        catch (HttpRequestException ex)
+        {
+            return ApiResult<EscrowCredentialStatusDto>.Failure(
+                ApiErrorKind.Offline,
+                $"Hive server unreachable on LAN ({ex.Message}).");
+        }
+        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        {
+            return ApiResult<EscrowCredentialStatusDto>.Failure(
+                ApiErrorKind.Offline,
+                "Hive server request timed out.");
+        }
+        catch (JsonException)
+        {
+            return ApiResult<EscrowCredentialStatusDto>.Failure(
+                ApiErrorKind.InvalidResponse,
+                "Received invalid escrow credential status JSON from Hive server.");
+        }
+    }
+
+    public async Task<ApiResult<bool>> DeleteEscrowCredentialAsync(
+        Guid deviceId,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var idempotencyKey = Guid.NewGuid().ToString("N");
+            using var response = await SendWithAuthRetryAsync(
+                () =>
+                {
+                    var message = new HttpRequestMessage(
+                        HttpMethod.Delete,
+                        BuildEndpointUri($"{ProtocolConstants.ApiPrefix}/workstations/{deviceId:D}/escrow-credential"));
+                    message.Headers.Add(ProtocolConstants.CorrelationIdHeader, Guid.NewGuid().ToString("N"));
+                    message.Headers.Add(ProtocolConstants.IdempotencyKeyHeader, idempotencyKey);
+                    return message;
+                },
+                attachBearerToken: true,
+                allowRefreshRetry: true,
+                ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return MapHttpError<bool>(
+                    response.StatusCode,
+                    await SafeReadErrorAsync(response, ct).ConfigureAwait(false));
+            }
+
+            return ApiResult<bool>.Success(true, response.StatusCode);
+        }
+        catch (HttpRequestException ex)
+        {
+            return ApiResult<bool>.Failure(
+                ApiErrorKind.Offline,
+                $"Hive server unreachable on LAN ({ex.Message}).");
+        }
+        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        {
+            return ApiResult<bool>.Failure(
+                ApiErrorKind.Offline,
+                "Hive server request timed out.");
+        }
+    }
+
+    public Task<ApiResult<RevealEscrowCredentialResponse>> RevealEscrowCredentialAsync(
+        Guid deviceId,
+        RevealEscrowCredentialRequest request,
+        CancellationToken ct = default) =>
+        SendJsonAsync<RevealEscrowCredentialRequest, RevealEscrowCredentialResponse>(
+            HttpMethod.Post,
+            $"{ProtocolConstants.ApiPrefix}/workstations/{deviceId:D}/escrow-credential/reveal",
+            request,
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            includeIdempotencyHeader: true,
+            ct);
+
     public Task<ApiResult<bool>> RecordNotificationDeliveryAsync(
         Guid notificationId,
         RecordDeliveryRequest request,

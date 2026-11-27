@@ -21,5 +21,6 @@
     <EmbeddedResource Include="Migrations\0003_LocalAuthAccounts.sql" />
     <EmbeddedResource Include="Migrations\0004_SoftwareCompliance.sql" />
     <EmbeddedResource Include="Migrations\0005_Notifications.sql" />
+    <EmbeddedResource Include="Migrations\0006_RemoteAccessEscrow.sql" />
   </ItemGroup>
 </Project>

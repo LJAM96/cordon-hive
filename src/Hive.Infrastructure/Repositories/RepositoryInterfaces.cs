@@ -88,7 +88,9 @@ public interface IDeviceRepository
         string? hostname,
         IReadOnlyList<DeviceSession> sessions,
         DateTimeOffset seenAtUtc,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        bool protectedModeActive = false,
+        string? protectedModeReason = null);
 
     Task<UpdateAssignmentResult> UpdateAssignmentAsync(
         Guid deviceId,

@@ -11,7 +11,9 @@ public sealed record HeartbeatRequest(
     string AgentVersion,
     IReadOnlyList<string> Capabilities,
     IReadOnlyList<ObservedSessionDto> Sessions,
-    string? Hostname);
+    string? Hostname,
+    bool ProtectedModeActive = false,
+    string? ProtectedModeReason = null);
 
 public sealed record HeartbeatResponse(
     long PolicyRevision,

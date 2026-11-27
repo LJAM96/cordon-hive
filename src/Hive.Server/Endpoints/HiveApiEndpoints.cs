@@ -64,6 +64,7 @@ public static class HiveApiEndpoints
         api.MapAuthAndUserEndpoints();
         api.MapSoftwareEndpoints();
         api.MapNotificationEndpoints();
+        api.MapRemoteAccessEndpoints();
 
         return endpoints;
     }
@@ -260,7 +261,9 @@ public static class HiveApiEndpoints
             request.Hostname,
             sessions,
             nowUtc,
-            cancellationToken);
+            cancellationToken,
+            request.ProtectedModeActive,
+            request.ProtectedModeReason);
 
         if (updated is null)
         {

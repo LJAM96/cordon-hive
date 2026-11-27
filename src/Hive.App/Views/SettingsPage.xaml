@@ -101,6 +101,82 @@
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Workstation Break-Glass Credential Escrow" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock
+                        Text="Write-only break-glass credential storage for your assigned workstations (encrypted server-side with AES-256-GCM). Saved passwords are never read back or displayed."
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox
+                            x:Name="EscrowWorkstationComboBox"
+                            Grid.Column="0"
+                            Header="Assigned Workstation"
+                            PlaceholderText="Select an assigned workstation"
+                            HorizontalAlignment="Stretch"
+                            SelectionChanged="EscrowWorkstationComboBox_SelectionChanged"
+                            AutomationProperties.Name="Assigned Workstation Selector" />
+                        <Button
+                            x:Name="RefreshEscrowWorkstationsButton"
+                            Grid.Column="1"
+                            Content="Refresh"
+                            VerticalAlignment="Bottom"
+                            Click="RefreshEscrowWorkstationsButton_Click"
+                            AutomationProperties.Name="Refresh Assigned Workstations" />
+                    </Grid>
+
+                    <TextBlock
+                        x:Name="EscrowMetadataText"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+
+                    <TextBox
+                        x:Name="EscrowUsernameTextBox"
+                        Header="Workstation Login Username"
+                        PlaceholderText="e.g. .\examiner or DOMAIN\examiner"
+                        AutomationProperties.Name="Workstation Login Username" />
+
+                    <PasswordBox
+                        x:Name="EscrowPasswordBox"
+                        Header="Workstation Password"
+                        PlaceholderText="Enter workstation login password"
+                        AutomationProperties.Name="Workstation Escrow Password" />
+
+                    <PasswordBox
+                        x:Name="EscrowConfirmPasswordBox"
+                        Header="Confirm Workstation Password"
+                        PlaceholderText="Re-enter workstation login password"
+                        AutomationProperties.Name="Confirm Workstation Escrow Password" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button
+                            x:Name="SaveEscrowButton"
+                            Content="Save Break-Glass Credential"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="SaveEscrowButton_Click"
+                            AutomationProperties.Name="Save Break-Glass Credential" />
+                    </StackPanel>
+
+                    <TextBlock
+                        x:Name="EscrowStatusText"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
                 <StackPanel Spacing="6">
                     <TextBlock Text="Client Execution Context" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                     <TextBlock

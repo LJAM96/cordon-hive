@@ -39,6 +39,9 @@ services:
       - source: hive_bootstrap_admin_password
         target: hive_bootstrap_admin_password
         mode: 0400
+      - source: hive_vault_master_key
+        target: hive_vault_master_key
+        mode: 0400
     volumes:
       - type: bind
         source: ${HIVE_INTERNAL_CA_PATH:-/etc/cordon-hive/internal-ca.crt}
@@ -80,6 +83,8 @@ secrets:
   hive_tls_key:
     external: true
   hive_bootstrap_admin_password:
+    external: true
+  hive_vault_master_key:
     external: true
 
 volumes:
