@@ -1,0 +1,18 @@
+<Page
+    x:Class="Hive.App.Views.UpdatesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Spacing="12" Padding="4" MaxWidth="720" HorizontalAlignment="Left">
+        <TextBlock
+            Text="Updates &amp; Protection Lock"
+            Style="{ThemeResource TitleTextBlockStyle}"
+            AutomationProperties.Name="Updates Heading" />
+        <InfoBar
+            IsOpen="True"
+            IsClosable="False"
+            Severity="Informational"
+            Title="Scheduled for Phases P4–P5 (Notifications &amp; Safe Deployment)"
+            Message="Examiner-controlled update staging, deferral status, and explicit protected forensic workload lock controls will be surfaced here." />
+    </StackPanel>
+</Page>

@@ -1,0 +1,384 @@
+<Page
+    x:Class="Hive.App.Views.SoftwarePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Hive.App.ViewModels">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="4">
+            <Grid ColumnSpacing="12" RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock
+                        Text="Software Compliance"
+                        Style="{ThemeResource TitleTextBlockStyle}"
+                        AutomationProperties.Name="Software Compliance Heading" />
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock
+                            Text="{x:Bind ViewModel.RoleScopeSummaryText, Mode=OneWay}"
+                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.LastRefreshedLocalText, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button
+                        Content="Add Product"
+                        Visibility="{x:Bind ViewModel.ManageCatalogueVisibility, Mode=OneWay}"
+                        IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}"
+                        Click="AddProductButton_Click"
+                        AutomationProperties.Name="Add Software Product" />
+
+                    <Button
+                        Content="Draft Release"
+                        Visibility="{x:Bind ViewModel.ManageCatalogueVisibility, Mode=OneWay}"
+                        IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}"
+                        Click="DraftReleaseButton_Click"
+                        AutomationProperties.Name="Draft Software Release" />
+
+                    <Button
+                        Content="Approve Selected Release"
+                        Visibility="{x:Bind ViewModel.ApproveReleasesVisibility, Mode=OneWay}"
+                        Command="{x:Bind ViewModel.ApproveSelectedReleaseCommand}"
+                        AutomationProperties.Name="Approve Selected Software Release" />
+
+                    <Button
+                        Content="Add Exemption"
+                        Visibility="{x:Bind ViewModel.ManageExemptionsVisibility, Mode=OneWay}"
+                        IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}"
+                        Click="AddExemptionButton_Click"
+                        AutomationProperties.Name="Add Software Exemption" />
+
+                    <Button
+                        Content="Refresh"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}"
+                        Command="{x:Bind ViewModel.RefreshCommand}"
+                        AutomationProperties.Name="Refresh Software Compliance" />
+                </StackPanel>
+            </Grid>
+
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.IsFeedbackOpen, Mode=TwoWay}"
+                Severity="{x:Bind ViewModel.FeedbackSeverity, Mode=OneWay}"
+                Title="{x:Bind ViewModel.FeedbackTitle, Mode=OneWay}"
+                Message="{x:Bind ViewModel.FeedbackMessage, Mode=OneWay}"
+                AutomationProperties.Name="Software Compliance Status Banner" />
+
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.2*" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    Grid.Column="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    VerticalAlignment="Top">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Workstations" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock
+                            Text="No workstation compliance summaries available."
+                            Visibility="{x:Bind ViewModel.EmptyDevicesVisibility, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+
+                        <ListView
+                            ItemsSource="{x:Bind ViewModel.Devices, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedDevice, Mode=TwoWay}"
+                            MaxHeight="360"
+                            AutomationProperties.Name="Workstation Compliance List">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DeviceComplianceItemViewModel">
+                                    <Grid Padding="6,8" ColumnSpacing="10" AutomationProperties.Name="{x:Bind AccessibilityName}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Text="{x:Bind Hostname}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                            <TextBlock
+                                                Text="{x:Bind SiteId}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock
+                                                Text="{x:Bind SummaryCountsText}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Text="{x:Bind LastInventoryLocalText}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+                                            <FontIcon Glyph="{x:Bind SummaryStatusGlyph}" FontSize="14" />
+                                            <TextBlock Text="{x:Bind SummaryStatusText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Grid.Column="1" Spacing="16">
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Managed Product Compliance" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.SelectedDeviceHeaderText, Mode=OneWay}"
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+
+                            <TextBlock
+                                Text="No managed products evaluated for the selected workstation."
+                                Visibility="{x:Bind ViewModel.EmptyComplianceVisibility, Mode=OneWay}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.ProductComplianceRows, Mode=OneWay}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ProductComplianceItemViewModel">
+                                        <Border
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="0,8">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <TextBlock Text="{x:Bind ProductName}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                    <TextBlock Text="{x:Bind VersionsSummaryText}" Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                    <TextBlock
+                                                        Text="{x:Bind Reason}"
+                                                        Style="{ThemeResource CaptionTextBlockStyle}"
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        Text="{x:Bind ExemptionExpiryLocalText}"
+                                                        Visibility="{x:Bind ExemptionExpiryVisibility}"
+                                                        Style="{ThemeResource CaptionTextBlockStyle}"
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </StackPanel>
+
+                                                <StackPanel
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Right"
+                                                    Spacing="2"
+                                                    AutomationProperties.Name="{x:Bind StatusAccessibilityName}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                                        <FontIcon Glyph="{x:Bind StatusGlyph}" FontSize="14" />
+                                                        <TextBlock Text="{x:Bind StatusText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                    </StackPanel>
+                                                    <TextBlock
+                                                        Text="{x:Bind LastInventoryLocalText}"
+                                                        Style="{ThemeResource CaptionTextBlockStyle}"
+                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Discovered Unmanaged Software" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock
+                                Text="No unmanaged discovered software reported for the selected workstation."
+                                Visibility="{x:Bind ViewModel.EmptyDiscoveredVisibility, Mode=OneWay}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.DiscoveredSoftware, Mode=OneWay}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:DiscoveredSoftwareItemViewModel">
+                                        <Grid Padding="0,6" ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Spacing="1">
+                                                <TextBlock Text="{x:Bind DisplayName}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Text="{x:Bind ProvenanceText}"
+                                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{x:Bind PublisherDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" Text="{x:Bind VersionDisplay}" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <Grid ColumnSpacing="16" RowSpacing="16" Visibility="{x:Bind ViewModel.FleetSectionVisibility, Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    Grid.Column="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Software Releases" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock
+                            Text="No software releases recorded."
+                            Visibility="{x:Bind ViewModel.EmptyReleasesVisibility, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <ListView
+                            ItemsSource="{x:Bind ViewModel.Releases, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedRelease, Mode=TwoWay}"
+                            MaxHeight="300"
+                            AutomationProperties.Name="Software Releases List">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SoftwareReleaseItemViewModel">
+                                    <Grid Padding="6,8" ColumnSpacing="10" AutomationProperties.Name="{x:Bind StatusAccessibilityName}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{x:Bind ProductName}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind VersionRaw}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                            </StackPanel>
+                                            <TextBlock
+                                                Text="{x:Bind MetadataText}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Text="{x:Bind ApprovalDetailText}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+                                            <FontIcon Glyph="{x:Bind StatusGlyph}" FontSize="14" />
+                                            <TextBlock Text="{x:Bind StatusText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Grid.Column="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Time-Bounded Exemptions" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                            <Button
+                                Grid.Column="1"
+                                Content="Revoke Selected"
+                                Visibility="{x:Bind ViewModel.ManageExemptionsVisibility, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.RevokeSelectedExemptionCommand}"
+                                AutomationProperties.Name="Revoke Selected Software Exemption" />
+                        </Grid>
+
+                        <TextBlock
+                            Text="No software exemptions configured."
+                            Visibility="{x:Bind ViewModel.EmptyExemptionsVisibility, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <ListView
+                            ItemsSource="{x:Bind ViewModel.Exemptions, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedExemption, Mode=TwoWay}"
+                            MaxHeight="300"
+                            AutomationProperties.Name="Software Exemptions List">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SoftwareExemptionItemViewModel">
+                                    <Grid Padding="6,8" ColumnSpacing="10" AutomationProperties.Name="{x:Bind StatusAccessibilityName}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{x:Bind ProductName}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind AllowedVersionDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+                                            <TextBlock Text="{x:Bind ScopeLabel}" Style="{ThemeResource CaptionTextBlockStyle}" />
+                                            <TextBlock
+                                                Text="{x:Bind Reason}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Text="{x:Bind WindowText}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock
+                                                Text="{x:Bind ApprovedByText}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+                                            <FontIcon Glyph="{x:Bind StatusGlyph}" FontSize="14" />
+                                            <TextBlock Text="{x:Bind StatusText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

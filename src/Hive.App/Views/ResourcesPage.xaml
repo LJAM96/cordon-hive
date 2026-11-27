@@ -1,0 +1,258 @@
+<Page
+    x:Class="Hive.App.Views.ResourcesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Hive.App.ViewModels">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="4">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock
+                        Text="Resources"
+                        Style="{ThemeResource TitleTextBlockStyle}"
+                        AutomationProperties.Name="Resources Heading" />
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock
+                            Text="{x:Bind ViewModel.ActiveSourceTitle, Mode=OneWay}"
+                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.LastRefreshedLocalText, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Button
+                    Grid.Column="1"
+                    Content="Local Workstation (IPC)"
+                    Command="{x:Bind ViewModel.SwitchToLocalCommand}"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Switch to Local Workstation IPC" />
+
+                <Button
+                    Grid.Column="2"
+                    Content="Refresh"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    Command="{x:Bind ViewModel.LoadCommand}"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Refresh Resources" />
+            </Grid>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <Grid ColumnSpacing="16" RowSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Text="{x:Bind ViewModel.AgentIpcStatusTitle, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.AgentIpcStatusMessage, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock Text="Agent Connectivity" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="{x:Bind ViewModel.AgentConnectivityGlyph, Mode=OneWay}" FontSize="14" />
+                            <TextBlock Text="{x:Bind ViewModel.AgentConnectivityText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="2">
+                        <TextBlock Text="Last Heartbeat" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.LastHeartbeatLocalText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Spacing="2">
+                        <TextBlock Text="Pending Queue" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.PendingQueueDisplay, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" HorizontalAlignment="Right" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid ColumnSpacing="12" RowSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="CPU" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.CpuMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Memory (RAM)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.MemoryMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="GPU" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.GpuMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="3" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Disk Activity" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.DiskMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <TextBlock
+                Text="{x:Bind ViewModel.SampleTimestampLocalText, Mode=OneWay}"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Storage Volumes" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="No volume telemetry available."
+                        Visibility="{x:Bind ViewModel.EmptyVolumesVisibility, Mode=OneWay}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Volumes, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:VolumeItemViewModel">
+                                <StackPanel Spacing="4" Margin="0,0,0,10" AutomationProperties.Name="{x:Bind AccessibilityName}">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind HeaderText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="{x:Bind HealthGlyph}" FontSize="14" />
+                                            <TextBlock Text="{x:Bind HealthText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ProgressBar Minimum="0" Maximum="100" Value="{x:Bind UsedPercent}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind CapacitySummaryText}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Bind ObservedLocalText}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Bind ViewModel.ProcessSnapshotHeaderText, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="No process snapshot available."
+                        Visibility="{x:Bind ViewModel.EmptyProcessesVisibility, Mode=OneWay}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Processes, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProcessItemViewModel">
+                                <Grid Padding="0,4" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind ImageName}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind PidDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind WorkingSetMibText}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="3" Text="{x:Bind CpuPercentText}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Assigned Workstations (LAN Server)" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.AssignedWorkstationsStatusText, Mode=OneWay}"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+
+                    <ListView
+                        ItemsSource="{x:Bind ViewModel.AssignedWorkstations, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.SelectedAssignedWorkstation, Mode=TwoWay}"
+                        MaxHeight="220"
+                        AutomationProperties.Name="Assigned Workstations List">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AssignedWorkstationItemViewModel">
+                                <Grid Padding="6,8" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{x:Bind Hostname}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <TextBlock Text="{x:Bind SiteId}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock Text="{x:Bind AssetNumberDisplay}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" Spacing="2">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                            <FontIcon Glyph="{x:Bind ConnectivityGlyph}" FontSize="14" />
+                                            <TextBlock Text="{x:Bind ConnectivityText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        </StackPanel>
+                                        <TextBlock Text="{x:Bind LastSeenLocalText}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

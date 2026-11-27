@@ -1,0 +1,18 @@
+<Page
+    x:Class="Hive.App.Views.AuditPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Spacing="12" Padding="4" MaxWidth="720" HorizontalAlignment="Left">
+        <TextBlock
+            Text="Audit Log"
+            Style="{ThemeResource TitleTextBlockStyle}"
+            AutomationProperties.Name="Audit Heading" />
+        <InfoBar
+            IsOpen="True"
+            IsClosable="False"
+            Severity="Informational"
+            Title="Foundation API Active (P1) — Console Viewer Expanding in P7"
+            Message="Append-only audit events are recorded server-side on /api/v1/audit with actor, site scope, correlation ID, and outcome. Scoped UI filtering and export arrive in later phases." />
+    </StackPanel>
+</Page>

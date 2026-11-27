@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Cordon.Shared.Windows\Cordon.Shared.Windows.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Windows\Hive.Windows.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Installer\Hive.Installer.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Contracts\Hive.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Domain\Hive.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Infrastructure\Hive.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Agent\Hive.Agent.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+</Project>

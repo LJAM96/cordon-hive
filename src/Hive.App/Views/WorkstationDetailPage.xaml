@@ -1,0 +1,260 @@
+<Page
+    x:Class="Hive.App.Views.WorkstationDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Hive.App.ViewModels">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="4">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button
+                    Grid.Column="0"
+                    Content="Back to Workstations"
+                    Click="BackButton_Click"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Back to Workstations" />
+
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock
+                        Text="{x:Bind ViewModel.Hostname, Mode=OneWay}"
+                        Style="{ThemeResource TitleTextBlockStyle}"
+                        AutomationProperties.Name="Workstation Detail Hostname" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Button
+                    Grid.Column="2"
+                    Content="Refresh"
+                    Command="{x:Bind ViewModel.RefreshCommand}"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Refresh Workstation Detail" />
+            </Grid>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <Grid ColumnSpacing="16" RowSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2">
+                        <TextBlock Text="Connectivity" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="6"
+                            AutomationProperties.Name="{x:Bind ViewModel.ConnectivityAccessibilityName, Mode=OneWay}">
+                            <FontIcon Glyph="{x:Bind ViewModel.ConnectivityGlyph, Mode=OneWay}" FontSize="16" />
+                            <TextBlock Text="{x:Bind ViewModel.ConnectivityText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                        <TextBlock
+                            Text="{x:Bind ViewModel.LastSeenLocalText, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="1" Spacing="2">
+                        <TextBlock Text="Site &amp; Asset" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.SiteIdDisplay, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.AssetNumberDisplay, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="2" Spacing="2">
+                        <TextBlock Text="Assigned User SID" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.AssignedUserDisplay, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.EnrollmentStateDisplay, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="20">
+                        <TextBlock
+                            Text="{x:Bind ViewModel.AgentVersionDisplay, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.TelemetryStatusMessage, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid ColumnSpacing="12" RowSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="CPU" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.CpuMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Memory (RAM)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.MemoryMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="GPU" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.GpuMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="3" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Disk Activity" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.DiskMetricText, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <TextBlock
+                Text="{x:Bind ViewModel.TelemetrySampledLocalText, Mode=OneWay}"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Storage Volumes" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="No volume snapshots recorded yet."
+                        Visibility="{x:Bind ViewModel.EmptyVolumesVisibility, Mode=OneWay}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Volumes, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:VolumeItemViewModel">
+                                <StackPanel Spacing="4" Margin="0,0,0,10" AutomationProperties.Name="{x:Bind AccessibilityName}">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind HeaderText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="{x:Bind HealthGlyph}" FontSize="14" />
+                                            <TextBlock Text="{x:Bind HealthText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ProgressBar Minimum="0" Maximum="100" Value="{x:Bind UsedPercent}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind CapacitySummaryText}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Bind ObservedLocalText}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Active Sessions" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="No active sessions reported."
+                        Visibility="{x:Bind ViewModel.EmptySessionsVisibility, Mode=OneWay}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.ActiveSessions, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SessionItemViewModel">
+                                <Grid Padding="0,4" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind HeaderText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind UserSidDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind ObservedLocalText}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Bind ViewModel.ProcessSnapshotHeaderText, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="No process snapshot recorded yet."
+                        Visibility="{x:Bind ViewModel.EmptyProcessesVisibility, Mode=OneWay}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Processes, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProcessItemViewModel">
+                                <Grid Padding="0,4" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind ImageName}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind PidDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind WorkingSetMibText}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="3" Text="{x:Bind CpuPercentText}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,114 @@
+<Page
+    x:Class="Hive.App.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="4" MaxWidth="640" HorizontalAlignment="Left">
+            <TextBlock
+                Text="Settings"
+                Style="{ThemeResource TitleTextBlockStyle}"
+                AutomationProperties.Name="Settings Heading" />
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Account &amp; Session" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock
+                        Text="{x:Bind MainVm.SignedInUserSummary, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Text="{x:Bind MainVm.ScopeSummaryText, Mode=OneWay}"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+
+                    <InfoBar
+                        Severity="Warning"
+                        IsClosable="False"
+                        IsOpen="{x:Bind MainVm.MustChangePasswordBanner, Mode=OneWay}"
+                        Title="Temporary Password Active"
+                        Message="Please update your password using Change Password." />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button
+                            Content="{x:Bind MainVm.SignInButtonLabel, Mode=OneWay}"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="SignInButton_Click"
+                            AutomationProperties.Name="Sign In" />
+                        <Button
+                            Content="Sign Out"
+                            IsEnabled="{x:Bind MainVm.CanSignOut, Mode=OneWay}"
+                            Click="SignOutButton_Click"
+                            AutomationProperties.Name="Sign Out" />
+                        <Button
+                            Content="Change Password"
+                            IsEnabled="{x:Bind MainVm.IsSignedIn, Mode=OneWay}"
+                            Click="ChangePasswordButton_Click"
+                            AutomationProperties.Name="Change Password" />
+                    </StackPanel>
+
+                    <TextBlock
+                        x:Name="AccountStatusText"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="LAN Server Connection" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock
+                        Text="Operates strictly on the internal forensic LAN using local bearer sessions (DPAPI-protected) or Windows Negotiate authentication."
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+
+                    <TextBox
+                        x:Name="ServerUrlTextBox"
+                        Header="Hive Server Base URL"
+                        PlaceholderText="https://localhost:5001"
+                        AutomationProperties.Name="Hive Server Base URL Input" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button
+                            Content="Apply &amp; Reconnect"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="ApplyAndReconnectButton_Click"
+                            AutomationProperties.Name="Apply Server URL and Reconnect" />
+                    </StackPanel>
+
+                    <TextBlock
+                        x:Name="SettingsStatusText"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Client Execution Context" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock
+                        Text="Execution Level: Unelevated (asInvoker). Administrative software deployment brokers run separately via signed local IPC permits (P5)."
+                        TextWrapping="Wrap"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
