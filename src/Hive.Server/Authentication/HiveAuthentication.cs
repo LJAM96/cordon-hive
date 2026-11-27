@@ -18,6 +18,7 @@ public static class HiveAuthPolicies
 {
     public const string UserOnly = "UserOnly";
     public const string DeviceOnly = "DeviceOnly";
+    public const string UserOrDevice = "UserOrDevice";
 }
 
 public static class HiveClaimTypes

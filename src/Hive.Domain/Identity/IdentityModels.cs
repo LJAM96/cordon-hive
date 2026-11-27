@@ -161,6 +161,20 @@ public static class ScopeAuthorizationService
         actor.HasRole(HiveRole.BreakGlassCustodian) &&
         actor.CanAccessSite(siteId);
 
+    public static bool CanSignSoftwareRelease(ActorIdentity actor) =>
+        !actor.IsDevice &&
+        actor.HasAnyRole(HiveRole.SoftwareAdmin, HiveRole.SoftwareApprover, HiveRole.Administrator);
+
+    public static bool CanViewDeployments(ActorIdentity actor, string siteId) =>
+        !actor.IsDevice &&
+        actor.HasAnyRole(HiveRole.SoftwareAdmin, HiveRole.SoftwareApprover, HiveRole.Supervisor, HiveRole.Administrator, HiveRole.Auditor) &&
+        actor.CanAccessSite(siteId);
+
+    public static bool CanManageDeployments(ActorIdentity actor, string siteId) =>
+        !actor.IsDevice &&
+        actor.HasAnyRole(HiveRole.SoftwareAdmin, HiveRole.Administrator) &&
+        actor.CanAccessSite(siteId);
+
     public static bool CanSendHeartbeat(ActorIdentity actor, Guid deviceId) =>
         actor.IsDevice &&
         actor.DeviceId == deviceId;

@@ -65,6 +65,7 @@ public static class HiveApiEndpoints
         api.MapSoftwareEndpoints();
         api.MapNotificationEndpoints();
         api.MapRemoteAccessEndpoints();
+        api.MapDeploymentEndpoints();
 
         return endpoints;
     }

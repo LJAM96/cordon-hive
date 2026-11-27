@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Hive.Contracts;
+using Hive.Domain.Deployments;
 using Hive.Domain.Devices;
 using Hive.Infrastructure.Sqlite;
 using Hive.Windows.Ipc;
@@ -92,7 +94,20 @@ public sealed class HeartbeatWorker : BackgroundService
             ? machine.ObservedSessions
             : [new ObservedSessionDto(machine.CurrentSessionId, UserSid: null, "Active", machine.CapturedAtUtc)];
 
-        var protectedModeActive = _runtimeState.ProtectedModeActive;
+        var lockCursor = await _store
+            .GetSyncCursorAsync(AgentUserIpcWorker.MaintenanceLockCursorKey, cancellationToken)
+            .ConfigureAwait(false);
+        var persistedLock = AgentUserIpcWorker.TryDeserializeMaintenanceLock(lockCursor);
+        var protectedModeActive = state.ProtectedModeActive
+            || _runtimeState.ProtectedModeActive
+            || (persistedLock?.ManualProtectedMode ?? false);
+
+        var protectedModeReason = protectedModeActive
+            ? (!string.IsNullOrWhiteSpace(persistedLock?.ReasonCode)
+                ? persistedLock.ReasonCode
+                : "Local protection lock active")
+            : null;
+
         var request = new HeartbeatRequest(
             machine.BootId,
             _runtimeState.AgentVersion,
@@ -100,7 +115,7 @@ public sealed class HeartbeatWorker : BackgroundService
             sessions,
             machine.Hostname,
             ProtectedModeActive: protectedModeActive,
-            ProtectedModeReason: protectedModeActive ? "Local protection lock active" : null);
+            ProtectedModeReason: protectedModeReason);
 
         var endpoint = new Uri(baseUri, $"{ProtocolConstants.ApiPrefix}/agent/heartbeat");
         var httpClient = _httpClientFactory.GetOrCreateClient(state.CertificateThumbprint);

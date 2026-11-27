@@ -301,6 +301,40 @@ public sealed class HiveApiClient : IDisposable
             $"{ProtocolConstants.ApiPrefix}/workstations/{deviceId:D}/compliance",
             cancellationToken);
 
+    public Task<ApiResult<IReadOnlyList<DeploymentJobDto>>> GetDeploymentsAsync(
+        string? siteId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = string.IsNullOrWhiteSpace(siteId)
+            ? $"{ProtocolConstants.ApiPrefix}/deployments"
+            : $"{ProtocolConstants.ApiPrefix}/deployments?siteId={Uri.EscapeDataString(siteId.Trim())}";
+        return GetListAsync<DeploymentJobDto>(path, "deployments", cancellationToken);
+    }
+
+    public Task<ApiResult<DeploymentJobDto>> CreateDeploymentJobAsync(
+        CreateDeploymentJobRequest request,
+        CancellationToken cancellationToken = default) =>
+        SendJsonAsync<CreateDeploymentJobRequest, DeploymentJobDto>(
+            HttpMethod.Post,
+            $"{ProtocolConstants.ApiPrefix}/deployments",
+            request,
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            includeIdempotencyHeader: true,
+            cancellationToken);
+
+    public Task<ApiResult<bool>> CancelDeploymentJobAsync(
+        Guid jobId,
+        CancellationToken cancellationToken = default) =>
+        SendNoContentAsync(
+            HttpMethod.Post,
+            $"{ProtocolConstants.ApiPrefix}/deployments/{jobId:D}/cancel",
+            new { },
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            cancellationToken,
+            idempotencyKey: Guid.NewGuid().ToString("N"));
+
     public Task<ApiResult<NotificationSyncResponse>> SyncMyNotificationsAsync(
         string? cursor,
         CancellationToken ct = default)

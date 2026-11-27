@@ -1,4 +1,5 @@
 using Hive.Domain.Audit;
+using Hive.Domain.Deployments;
 using Hive.Domain.Devices;
 using Hive.Domain.Enrollment;
 
@@ -25,6 +26,11 @@ public sealed class InMemoryHiveStore
     internal readonly Dictionary<string, EnrollmentToken> TokensByHash = new(StringComparer.Ordinal);
     internal readonly List<AuditEvent> AuditEvents = new();
     internal readonly List<OutboxEventRecord> OutboxEvents = new();
+    internal readonly Dictionary<Guid, PackageArtifact> Packages = new();
+    internal readonly Dictionary<Guid, SignedManifestEnvelope> SignedManifests = new();
+    internal readonly Dictionary<Guid, DeploymentJob> DeploymentJobs = new();
+    internal readonly Dictionary<Guid, DeploymentTarget> DeploymentTargets = new();
+    internal readonly Dictionary<Guid, List<DeploymentAttempt>> DeploymentAttempts = new();
 }
 
 public sealed class InMemoryDeviceRepository : IDeviceRepository

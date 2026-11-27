@@ -1,18 +1,304 @@
 <Page
     x:Class="Hive.App.Views.DeploymentsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Hive.App.ViewModels">
 
-    <StackPanel Spacing="12" Padding="4" MaxWidth="720" HorizontalAlignment="Left">
-        <TextBlock
-            Text="Deployments"
-            Style="{ThemeResource TitleTextBlockStyle}"
-            AutomationProperties.Name="Deployments Heading" />
-        <InfoBar
-            IsOpen="True"
-            IsClosable="False"
-            Severity="Informational"
-            Title="Scheduled for Phase P5 (Safe Deployment)"
-            Message="Supervisor target previews, signed immutable release rollouts, workload guard locks, and deployment state transitions will be orchestrated here." />
-    </StackPanel>
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="4">
+            <Grid ColumnSpacing="12" RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock
+                        Text="Deployments"
+                        Style="{ThemeResource TitleTextBlockStyle}"
+                        AutomationProperties.Name="Deployments Heading" />
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock
+                            Text="{x:Bind ViewModel.RoleScopeSummaryText, Mode=OneWay}"
+                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.LastRefreshedLocalText, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Button
+                    Grid.Column="1"
+                    Content="Refresh"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}"
+                    Command="{x:Bind ViewModel.RefreshCommand}"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Refresh Deployments" />
+            </Grid>
+
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.IsFeedbackOpen, Mode=TwoWay}"
+                Severity="{x:Bind ViewModel.FeedbackSeverity, Mode=OneWay}"
+                Title="{x:Bind ViewModel.FeedbackTitle, Mode=OneWay}"
+                Message="{x:Bind ViewModel.FeedbackMessage, Mode=OneWay}"
+                AutomationProperties.Name="Deployments Status Banner" />
+
+            <Border
+                Visibility="{x:Bind ViewModel.ManageDeploymentsVisibility, Mode=OneWay}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Create Safe Deployment Job" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock
+                            Text="Only cryptographically signed, approved releases may be deployed. Workstations enforce fail-closed workload protection and never terminate active forensic processes or reboot automatically."
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Grid ColumnSpacing="16" RowSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.4*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox
+                            Grid.Column="0"
+                            Header="Approved Release"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{x:Bind ViewModel.ApprovedReleases, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedRelease, Mode=TwoWay}"
+                            DisplayMemberPath="DisplayLabel"
+                            PlaceholderText="Select an approved release"
+                            AutomationProperties.Name="Approved Release Selector" />
+
+                        <ComboBox
+                            Grid.Column="1"
+                            Header="Deployment Policy"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{x:Bind ViewModel.Policies}"
+                            SelectedItem="{x:Bind ViewModel.SelectedPolicy, Mode=TwoWay}"
+                            AutomationProperties.Name="Deployment Policy Selector" />
+                    </Grid>
+
+                    <TextBlock
+                        Text="No approved software releases are available for deployment."
+                        Visibility="{x:Bind ViewModel.EmptyReleasesVisibility, Mode=OneWay}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Target Workstations (Single Site per Job)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="No site workstations available."
+                            Visibility="{x:Bind ViewModel.EmptyWorkstationsVisibility, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <ListView
+                            ItemsSource="{x:Bind ViewModel.Workstations, Mode=OneWay}"
+                            SelectionMode="None"
+                            MaxHeight="220"
+                            AutomationProperties.Name="Deployment Target Workstations List">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DeploymentWorkstationOptionViewModel">
+                                    <Grid Padding="4,4" ColumnSpacing="10" AutomationProperties.Name="{x:Bind AccessibilityName}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox
+                                            Grid.Column="0"
+                                            IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                            MinWidth="0"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.Name="{x:Bind Hostname}" />
+
+                                        <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind Hostname}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                            <TextBlock
+                                                Text="{x:Bind Subtitle}"
+                                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+
+                    <Border
+                        Background="{ThemeResource LayerFillColorAltBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="12">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Target Preview" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.TargetPreviewSummaryText, Mode=OneWay}"
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.TargetPreviewHostnamesText, Mode=OneWay}"
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox
+                            Grid.Column="0"
+                            IsChecked="{x:Bind ViewModel.IsDeploymentConfirmed, Mode=TwoWay}"
+                            Content="I confirm the target count, workstation hostnames, and deployment policy shown above."
+                            AutomationProperties.Name="Confirm Deployment Targets" />
+
+                        <Button
+                            Grid.Column="1"
+                            Content="Create Deployment"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Command="{x:Bind ViewModel.CreateDeploymentCommand}"
+                            IsEnabled="{x:Bind ViewModel.CanCreateDeployment, Mode=OneWay}"
+                            AutomationProperties.Name="Create Deployment Job" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.2*" />
+                    <ColumnDefinition Width="1.8*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    Grid.Column="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    VerticalAlignment="Top">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Deployment Jobs" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                            <Button
+                                Grid.Column="1"
+                                Content="Cancel Not-Started"
+                                Visibility="{x:Bind ViewModel.ManageDeploymentsVisibility, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.CancelSelectedJobCommand}"
+                                AutomationProperties.Name="Cancel Not-Started Targets" />
+                        </Grid>
+
+                        <TextBlock
+                            Text="No deployment jobs created yet."
+                            Visibility="{x:Bind ViewModel.EmptyJobsVisibility, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+
+                        <ListView
+                            ItemsSource="{x:Bind ViewModel.DeploymentJobs, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedJob, Mode=TwoWay}"
+                            MaxHeight="420"
+                            AutomationProperties.Name="Deployment Jobs List">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DeploymentJobItemViewModel">
+                                    <StackPanel Padding="6,8" Spacing="3" AutomationProperties.Name="{x:Bind AccessibilityName}">
+                                        <TextBlock Text="{x:Bind TitleText}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <TextBlock
+                                            Text="{x:Bind MetadataText}"
+                                            Style="{ThemeResource CaptionTextBlockStyle}"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            Text="{x:Bind TargetSummaryText}"
+                                            Style="{ThemeResource CaptionTextBlockStyle}"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Grid.Column="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    VerticalAlignment="Top">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Job Targets &amp; Safety State" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.SelectedJobHeaderText, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+
+                        <TextBlock
+                            Text="Select a deployment job to inspect per-workstation states."
+                            Visibility="{x:Bind ViewModel.EmptyTargetsVisibility, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.SelectedJobTargets, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DeploymentTargetItemViewModel">
+                                    <Border
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="0,8">
+                                        <Grid ColumnSpacing="12" AutomationProperties.Name="{x:Bind AccessibilityName}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Text="{x:Bind Hostname}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock
+                                                    Text="{x:Bind ReasonSummaryText}"
+                                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    TextWrapping="Wrap" />
+                                                <TextBlock
+                                                    Text="{x:Bind DeferredUntilText}"
+                                                    Visibility="{x:Bind DeferredVisibility}"
+                                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock
+                                                    Text="{x:Bind AttemptSummaryText}"
+                                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+                                                <FontIcon Glyph="{x:Bind StatusGlyph}" FontSize="14" />
+                                                <TextBlock Text="{x:Bind State}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </Page>

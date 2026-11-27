@@ -44,7 +44,13 @@ builder.Services.Configure<AdRoleMappingOptions>(
     builder.Configuration.GetSection(AdRoleMappingOptions.SectionName));
 builder.Services.Configure<JwtAuthOptions>(
     builder.Configuration.GetSection(JwtAuthOptions.SectionName));
+builder.Services.Configure<PackageStorageOptions>(
+    builder.Configuration.GetSection(PackageStorageOptions.SectionName));
+builder.Services.Configure<DeploymentSigningOptions>(
+    builder.Configuration.GetSection(DeploymentSigningOptions.SectionName));
 builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddSingleton<IPackageArtifactStore, FileSystemPackageArtifactStore>();
+builder.Services.AddSingleton<ReleaseSigningService>();
 
 var storageProvider = builder.Configuration["Storage:Provider"];
 var connectionString = builder.Configuration.GetConnectionString("HivePostgres")
@@ -77,6 +83,7 @@ if (usePostgres)
     builder.Services.AddSingleton<ISoftwareRepository, PostgresSoftwareRepository>();
     builder.Services.AddSingleton<INotificationRepository, PostgresNotificationRepository>();
     builder.Services.AddSingleton<IEscrowCredentialRepository, PostgresEscrowCredentialRepository>();
+    builder.Services.AddSingleton<IDeploymentRepository, PostgresDeploymentRepository>();
 }
 else
 {
@@ -90,6 +97,7 @@ else
     builder.Services.AddSingleton<ISoftwareRepository, InMemorySoftwareRepository>();
     builder.Services.AddSingleton<INotificationRepository, InMemoryNotificationRepository>();
     builder.Services.AddSingleton<IEscrowCredentialRepository, InMemoryEscrowCredentialRepository>();
+    builder.Services.AddSingleton<IDeploymentRepository, InMemoryDeploymentRepository>();
 }
 
 builder.Services.AddSingleton<EscrowVaultService>();
@@ -219,6 +227,12 @@ builder.Services.AddAuthorization(options =>
         policy.AddAuthenticationSchemes(HiveAuthSchemes.DeviceCert);
         policy.RequireAuthenticatedUser();
         policy.RequireClaim(HiveClaimTypes.DeviceId);
+    });
+
+    options.AddPolicy(HiveAuthPolicies.UserOrDevice, policy =>
+    {
+        policy.AddAuthenticationSchemes(HiveAuthSchemes.User, HiveAuthSchemes.DeviceCert);
+        policy.RequireAuthenticatedUser();
     });
 });
 

@@ -5,7 +5,9 @@ public static class IpcMessageTypes
     public const string Hello = "hello";
     public const string GetStatus = "get_status";
     public const string GetLocalTelemetry = "get_local_telemetry";
+    public const string GetProtectionLock = "get_protection_lock";
     public const string SetProtectionLock = "set_protection_lock";
+    public const string RequestEligibleUpdate = "request_eligible_update";
     public const string BrokerInstall = "broker_install";
     public const string Error = "error";
 }
@@ -59,3 +61,9 @@ public sealed record IpcLocalTelemetryResponse(
     ProcessSnapshotDto? LatestProcessSnapshot,
     string ConnectivityState,
     DateTimeOffset? LastHeartbeatUtc);
+
+public sealed record IpcProtectionLockResponse(
+    bool ProtectedModeActive,
+    string ReasonCode,
+    string? LockedBySid,
+    DateTimeOffset? UpdatedUtc);

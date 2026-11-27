@@ -41,8 +41,32 @@ public sealed class LocalAgentIpcClient
         CancellationToken cancellationToken = default) =>
         SendRequestAsync<IpcLocalTelemetryResponse>(IpcMessageTypes.GetLocalTelemetry, cancellationToken);
 
+    public Task<LocalIpcResult<IpcProtectionLockResponse>> GetProtectionLockAsync(
+        CancellationToken cancellationToken = default) =>
+        SendRequestAsync<IpcProtectionLockResponse>(IpcMessageTypes.GetProtectionLock, cancellationToken);
+
+    public Task<LocalIpcResult<IpcProtectionLockResponse>> SetProtectionLockAsync(
+        bool enable,
+        string reasonCode,
+        CancellationToken cancellationToken = default)
+    {
+        var payloadJson = JsonSerializer.Serialize(
+            new IpcProtectionLockRequest(enable, reasonCode),
+            JsonOptions);
+        return SendRequestAsync<IpcProtectionLockResponse>(
+            IpcMessageTypes.SetProtectionLock,
+            payloadJson,
+            cancellationToken);
+    }
+
+    private Task<LocalIpcResult<T>> SendRequestAsync<T>(
+        string messageType,
+        CancellationToken cancellationToken) =>
+        SendRequestAsync<T>(messageType, "{}", cancellationToken);
+
     private async Task<LocalIpcResult<T>> SendRequestAsync<T>(
         string messageType,
+        string payloadJson,
         CancellationToken cancellationToken)
     {
         try
@@ -62,7 +86,7 @@ public sealed class LocalAgentIpcClient
                 ProtocolConstants.IpcProtocolVersion,
                 messageType,
                 Guid.NewGuid().ToString("N"),
-                "{}");
+                payloadJson);
 
             await WriteEnvelopeAsync(pipe, request, timeoutCts.Token).ConfigureAwait(false);
             var response = await ReadEnvelopeAsync(pipe, timeoutCts.Token).ConfigureAwait(false);
