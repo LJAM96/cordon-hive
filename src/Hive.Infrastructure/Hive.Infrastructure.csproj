@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hive.Contracts\Hive.Contracts.csproj" />
+    <ProjectReference Include="..\Hive.Domain\Hive.Domain.csproj" />
+    <ProjectReference Include="..\Hive.Notifications\Hive.Notifications.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\0001_InitialFoundation.sql" />
+    <EmbeddedResource Include="Migrations\0002_TelemetryVisibility.sql" />
+    <EmbeddedResource Include="Migrations\0003_LocalAuthAccounts.sql" />
+    <EmbeddedResource Include="Migrations\0004_SoftwareCompliance.sql" />
+  </ItemGroup>
+</Project>

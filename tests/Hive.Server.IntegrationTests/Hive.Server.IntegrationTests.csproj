@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hive.Contracts\Hive.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Domain\Hive.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Infrastructure\Hive.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Hive.Server\Hive.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+</Project>
