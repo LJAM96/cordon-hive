@@ -21,6 +21,7 @@ public partial class App : Application
     public static ResourcesViewModel ResourcesViewModel { get; } = new(LocalAgentIpcClient, ApiClient, MainViewModel);
     public static SoftwareViewModel SoftwareViewModel { get; } = new(ApiClient, MainViewModel);
     public static DeploymentsViewModel DeploymentsViewModel { get; } = new(ApiClient, MainViewModel);
+    public static AuditViewModel AuditViewModel { get; } = new(ApiClient, MainViewModel);
     public static UpdatesViewModel UpdatesViewModel { get; } = new(LocalAgentIpcClient, MainViewModel);
     public static NotificationsViewModel NotificationsViewModel { get; } = new(ApiClient, MainViewModel, NotificationCache, ToastNotifier);
     public static MainWindow? MainWindowInstance { get; private set; }

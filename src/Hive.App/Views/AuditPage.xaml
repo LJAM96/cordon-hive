@@ -1,18 +1,311 @@
 <Page
     x:Class="Hive.App.Views.AuditPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Hive.App.ViewModels">
 
-    <StackPanel Spacing="12" Padding="4" MaxWidth="720" HorizontalAlignment="Left">
-        <TextBlock
-            Text="Audit Log"
-            Style="{ThemeResource TitleTextBlockStyle}"
-            AutomationProperties.Name="Audit Heading" />
-        <InfoBar
-            IsOpen="True"
-            IsClosable="False"
-            Severity="Informational"
-            Title="Foundation API Active (P1) — Console Viewer Expanding in P7"
-            Message="Append-only audit events are recorded server-side on /api/v1/audit with actor, site scope, correlation ID, and outcome. Scoped UI filtering and export arrive in later phases." />
-    </StackPanel>
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="4">
+            <Grid ColumnSpacing="12" RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock
+                        Text="Audit &amp; Operations"
+                        Style="{ThemeResource TitleTextBlockStyle}"
+                        AutomationProperties.Name="Audit Heading" />
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock
+                            Text="{x:Bind ViewModel.RoleScopeSummaryText, Mode=OneWay}"
+                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.LastRefreshedLocalText, Mode=OneWay}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Button
+                    Grid.Column="1"
+                    Content="Refresh"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}"
+                    Command="{x:Bind ViewModel.RefreshCommand}"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Refresh Audit and Operations" />
+            </Grid>
+
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.IsFeedbackOpen, Mode=TwoWay}"
+                Severity="{x:Bind ViewModel.FeedbackSeverity, Mode=OneWay}"
+                Title="{x:Bind ViewModel.FeedbackTitle, Mode=OneWay}"
+                Message="{x:Bind ViewModel.FeedbackMessage, Mode=OneWay}"
+                AutomationProperties.Name="Audit Status Banner" />
+
+            <Border
+                Visibility="{x:Bind ViewModel.OperationalHealthVisibility, Mode=OneWay}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Operational Health &amp; Emergency Stop" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock
+                            Text="Live server status, deployment lease/outbox counters, and administrator emergency stop control."
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <InfoBar
+                        IsOpen="{x:Bind ViewModel.DeploymentsPaused, Mode=OneWay}"
+                        IsClosable="False"
+                        Severity="Warning"
+                        Title="Deployments Paused (Emergency Stop Active)"
+                        Message="{x:Bind ViewModel.PauseReason, Mode=OneWay}"
+                        AutomationProperties.Name="Emergency Stop Active Banner" />
+
+                    <Grid ColumnSpacing="16" RowSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Status" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.OperationalStatusValue, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="2">
+                            <TextBlock Text="Storage Provider" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.StorageProviderValue, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0" Grid.Column="2" Spacing="2">
+                            <TextBlock Text="Protocol Version" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.ProtocolVersionValue, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Active Deployment Leases" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.ActiveDeploymentLeaseCountValue, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
+                            <TextBlock Text="Pending Outbox Count" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.PendingOutboxCountValue, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="2" Spacing="2">
+                            <TextBlock Text="Last Telemetry Prune (UTC)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.LastTelemetryPruneUtcValue, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Border
+                        Visibility="{x:Bind ViewModel.EmergencyStopControlsVisibility, Mode=OneWay}"
+                        Background="{ThemeResource LayerFillColorAltBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="12">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Emergency Stop Control (Administrator Only)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBox
+                                Header="Operational Reason"
+                                PlaceholderText="Enter mandatory operational reason for audit log..."
+                                Text="{x:Bind ViewModel.EmergencyStopReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                AutomationProperties.Name="Emergency Stop Reason" />
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox
+                                    Grid.Column="0"
+                                    Content="Invalidate active deployment leases when pausing"
+                                    IsChecked="{x:Bind ViewModel.InvalidateActiveLeases, Mode=TwoWay}"
+                                    AutomationProperties.Name="Invalidate Active Leases" />
+                                <Button
+                                    Grid.Column="1"
+                                    Content="{x:Bind ViewModel.EmergencyStopButtonText, Mode=OneWay}"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Command="{x:Bind ViewModel.ToggleEmergencyStopCommand}"
+                                    AutomationProperties.Name="Toggle Emergency Stop" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <InfoBar
+                Visibility="{x:Bind ViewModel.AuditRestrictedNoticeVisibility, Mode=OneWay}"
+                IsOpen="True"
+                IsClosable="False"
+                Severity="Informational"
+                Title="Audit Log Viewer Requires Auditor or Administrator Role"
+                Message="Your current role scope permits viewing operational health status, but scoped audit queries and CSV exports are restricted to Auditor and Administrator accounts." />
+
+            <Border
+                Visibility="{x:Bind ViewModel.AuditLogVisibility, Mode=OneWay}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="12">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Scoped Audit Log" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock
+                                Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button
+                                Content="Apply Filters"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Command="{x:Bind ViewModel.ApplyFiltersCommand}"
+                                AutomationProperties.Name="Apply Audit Filters" />
+                            <Button
+                                Content="Export CSV"
+                                Command="{x:Bind ViewModel.ExportCsvCommand}"
+                                AutomationProperties.Name="Export Audit CSV" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnSpacing="12" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox
+                            Grid.Column="0"
+                            Header="SiteId"
+                            PlaceholderText="e.g. site-a"
+                            Text="{x:Bind ViewModel.SiteIdFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            AutomationProperties.Name="Filter by SiteId" />
+                        <TextBox
+                            Grid.Column="1"
+                            Header="Action"
+                            PlaceholderText="e.g. deployment.created"
+                            Text="{x:Bind ViewModel.ActionFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            AutomationProperties.Name="Filter by Action" />
+                        <TextBox
+                            Grid.Column="2"
+                            Header="ActorId"
+                            PlaceholderText="SID or username"
+                            Text="{x:Bind ViewModel.ActorIdFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            AutomationProperties.Name="Filter by ActorId" />
+                        <TextBox
+                            Grid.Column="3"
+                            Header="Result"
+                            PlaceholderText="Success / Denied / Failed"
+                            Text="{x:Bind ViewModel.ResultFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            AutomationProperties.Name="Filter by Result" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="{x:Bind ViewModel.PageSummaryText, Mode=OneWay}"
+                            Style="{ThemeResource BodyStrongTextBlockStyle}"
+                            VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <Button
+                                Content="Previous"
+                                Command="{x:Bind ViewModel.PreviousPageCommand}"
+                                AutomationProperties.Name="Previous Audit Page" />
+                            <Button
+                                Content="Next"
+                                Command="{x:Bind ViewModel.NextPageCommand}"
+                                AutomationProperties.Name="Next Audit Page" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid
+                        Padding="8,6"
+                        ColumnSpacing="8"
+                        Background="{ThemeResource LayerFillColorAltBrush}"
+                        CornerRadius="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="155" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1.1*" />
+                            <ColumnDefinition Width="0.9*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="OccurredAtUtc" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="Action" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="2" Text="ActorId" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="3" Text="ObjectType" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="4" Text="ObjectId" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="5" Text="Result" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="6" Text="SiteId" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="7" Text="CorrelationId" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                    </Grid>
+
+                    <TextBlock
+                        Text="No audit events match the current scope and filters."
+                        Visibility="{x:Bind ViewModel.EmptyAuditEventsVisibility, Mode=OneWay}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <ListView
+                        ItemsSource="{x:Bind ViewModel.AuditEvents, Mode=OneWay}"
+                        MaxHeight="420"
+                        AutomationProperties.Name="Scoped Audit Events List">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AuditEventItemViewModel">
+                                <Grid Padding="4,6" ColumnSpacing="8" AutomationProperties.Name="{x:Bind AccessibilityName}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="155" />
+                                        <ColumnDefinition Width="1.2*" />
+                                        <ColumnDefinition Width="1.1*" />
+                                        <ColumnDefinition Width="0.9*" />
+                                        <ColumnDefinition Width="1*" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind OccurredAtUtcText}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind Action}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind ActorId}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="3" Text="{x:Bind ObjectType}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="4" Text="{x:Bind ObjectId}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="5" Text="{x:Bind Result}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="6" Text="{x:Bind SiteId}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="7" Text="{x:Bind CorrelationId}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </Page>

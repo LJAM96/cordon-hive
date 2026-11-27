@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Hive.Contracts;
 using Hive.Domain.Devices;
+using Hive.Domain.Enrollment;
 using Hive.Infrastructure.Sqlite;
 using Hive.Windows.Ipc;
 using Hive.Windows.SystemInfo;
@@ -15,7 +16,7 @@ namespace Hive.Agent;
 /// </summary>
 public static class AgentEnrollmentBootstrapper
 {
-    public static async Task<int> RunAsync(
+    public static Task<int> RunAsync(
         string[] args,
         AgentOptions options,
         IAgentLocalStore store,
@@ -23,6 +24,27 @@ public static class AgentEnrollmentBootstrapper
         HttpClient httpClient,
         TextWriter stdout,
         TextWriter stderr,
+        CancellationToken cancellationToken = default) =>
+        RunAsync(
+            args,
+            options,
+            store,
+            machineInfoProvider,
+            httpClient,
+            stdout,
+            stderr,
+            certificateResolver: null,
+            cancellationToken);
+
+    internal static async Task<int> RunAsync(
+        string[] args,
+        AgentOptions options,
+        IAgentLocalStore store,
+        WindowsMachineInfoProvider machineInfoProvider,
+        HttpClient httpClient,
+        TextWriter stdout,
+        TextWriter stderr,
+        Func<string, X509Certificate2?>? certificateResolver,
         CancellationToken cancellationToken = default)
     {
         if (!TryParseArgs(args, out var parsed, out var parseError))
@@ -47,87 +69,139 @@ public static class AgentEnrollmentBootstrapper
             return 1;
         }
 
-        var thumbprint = AgentHttpClientFactory.NormalizeThumbprint(parsed.Thumbprint ?? options.CertificateThumbprint);
-        if (string.IsNullOrEmpty(thumbprint))
-        {
-            if (!parsed.DevSelfSigned)
-            {
-                await stderr.WriteLineAsync(
-                    "Enrollment failed: --thumbprint <hex> or Agent:CertificateThumbprint is required (or pass --dev-self-signed for development).")
-                    .ConfigureAwait(false);
-                return 1;
-            }
-
-            thumbprint = GenerateAndInstallDevCertificate(Environment.MachineName);
-            await stdout.WriteLineAsync($"Generated development client certificate with thumbprint {thumbprint}.")
-                .ConfigureAwait(false);
-        }
-
-        var machine = machineInfoProvider.GetMachineInfo();
-        var agentVersion = typeof(AgentRuntimeState).Assembly.GetName().Version?.ToString() ?? "1.0.0";
-        var request = new EnrollDeviceRequest(
-            parsed.Token,
-            machine.Hostname,
-            thumbprint,
-            parsed.AssetNumber,
-            agentVersion);
-
-        var endpoint = new Uri(baseUri, $"{ProtocolConstants.ApiPrefix}/devices/enroll");
-
+        X509Certificate2? certificate = null;
+        var ownsCertificate = false;
         try
         {
-            using var message = new HttpRequestMessage(HttpMethod.Post, endpoint)
+            var thumbprint = AgentHttpClientFactory.NormalizeThumbprint(parsed.Thumbprint ?? options.CertificateThumbprint);
+            if (string.IsNullOrEmpty(thumbprint))
             {
-                Content = JsonContent.Create(request, options: NamedPipeFraming.SerializerOptions)
-            };
-            message.Headers.Add(ProtocolConstants.CorrelationIdHeader, Guid.NewGuid().ToString("N"));
+                if (!parsed.DevSelfSigned)
+                {
+                    await stderr.WriteLineAsync(
+                        "Enrollment failed: --thumbprint <hex> or Agent:CertificateThumbprint is required (or pass --dev-self-signed for development).")
+                        .ConfigureAwait(false);
+                    return 1;
+                }
 
-            using var response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                await stderr.WriteLineAsync(
-                    $"Enrollment rejected by server (HTTP {(int)response.StatusCode} {response.ReasonPhrase}): {errorBody}")
+                certificate = GenerateAndInstallDevCertificate(Environment.MachineName);
+                ownsCertificate = true;
+                thumbprint = certificate.Thumbprint;
+                await stdout.WriteLineAsync($"Generated development client certificate with thumbprint {thumbprint}.")
                     .ConfigureAwait(false);
-                return 1;
+            }
+            else if (certificateResolver is not null)
+            {
+                certificate = certificateResolver(thumbprint);
+            }
+            else
+            {
+                certificate = AgentHttpClientFactory.FindClientCertificate(thumbprint);
+                ownsCertificate = certificate is not null;
             }
 
-            var enrollResponse = await response.Content
-                .ReadFromJsonAsync<EnrollDeviceResponse>(NamedPipeFraming.SerializerOptions, cancellationToken)
-                .ConfigureAwait(false);
+            var machine = machineInfoProvider.GetMachineInfo();
+            var agentVersion = typeof(AgentRuntimeState).Assembly.GetName().Version?.ToString() ?? "1.0.0";
+            var request = BuildEnrollDeviceRequest(
+                parsed.Token,
+                machine.Hostname,
+                thumbprint,
+                parsed.AssetNumber,
+                agentVersion,
+                certificate);
 
-            if (enrollResponse is null || enrollResponse.DeviceId == Guid.Empty)
+            var endpoint = new Uri(baseUri, $"{ProtocolConstants.ApiPrefix}/devices/enroll");
+
+            try
             {
-                await stderr.WriteLineAsync("Enrollment failed: server returned an empty or invalid response.")
+                using var message = new HttpRequestMessage(HttpMethod.Post, endpoint)
+                {
+                    Content = JsonContent.Create(request, options: NamedPipeFraming.SerializerOptions)
+                };
+                message.Headers.Add(ProtocolConstants.CorrelationIdHeader, Guid.NewGuid().ToString("N"));
+
+                using var response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                    await stderr.WriteLineAsync(
+                        $"Enrollment rejected by server (HTTP {(int)response.StatusCode} {response.ReasonPhrase}): {errorBody}")
+                        .ConfigureAwait(false);
+                    return 1;
+                }
+
+                var enrollResponse = await response.Content
+                    .ReadFromJsonAsync<EnrollDeviceResponse>(NamedPipeFraming.SerializerOptions, cancellationToken)
                     .ConfigureAwait(false);
+
+                if (enrollResponse is null || enrollResponse.DeviceId == Guid.Empty)
+                {
+                    await stderr.WriteLineAsync("Enrollment failed: server returned an empty or invalid response.")
+                        .ConfigureAwait(false);
+                    return 1;
+                }
+
+                await store.InitializeAsync(cancellationToken).ConfigureAwait(false);
+                var existingState = await store.GetDeviceStateAsync(cancellationToken).ConfigureAwait(false);
+
+                var deviceState = new AgentDeviceState(
+                    DeviceId: enrollResponse.DeviceId,
+                    SiteId: enrollResponse.SiteId,
+                    CertificateThumbprint: thumbprint,
+                    EnrollmentState: EnrollmentState.Active.ToString(),
+                    PolicyRevision: enrollResponse.PolicyRevision,
+                    LastHeartbeatUtc: existingState?.LastHeartbeatUtc,
+                    ProtectedModeActive: existingState?.ProtectedModeActive ?? false,
+                    UpdatedAtUtc: DateTimeOffset.UtcNow);
+
+                await store.SaveDeviceStateAsync(deviceState, cancellationToken).ConfigureAwait(false);
+
+                await stdout.WriteLineAsync(
+                    $"Device enrolled successfully. DeviceId={enrollResponse.DeviceId:D}, SiteId={enrollResponse.SiteId}, PolicyRevision={enrollResponse.PolicyRevision}, Thumbprint={thumbprint}")
+                    .ConfigureAwait(false);
+                return 0;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                await stderr.WriteLineAsync($"Enrollment request failed: {ex.Message}").ConfigureAwait(false);
                 return 1;
             }
-
-            await store.InitializeAsync(cancellationToken).ConfigureAwait(false);
-            var existingState = await store.GetDeviceStateAsync(cancellationToken).ConfigureAwait(false);
-
-            var deviceState = new AgentDeviceState(
-                DeviceId: enrollResponse.DeviceId,
-                SiteId: enrollResponse.SiteId,
-                CertificateThumbprint: thumbprint,
-                EnrollmentState: EnrollmentState.Active.ToString(),
-                PolicyRevision: enrollResponse.PolicyRevision,
-                LastHeartbeatUtc: existingState?.LastHeartbeatUtc,
-                ProtectedModeActive: existingState?.ProtectedModeActive ?? false,
-                UpdatedAtUtc: DateTimeOffset.UtcNow);
-
-            await store.SaveDeviceStateAsync(deviceState, cancellationToken).ConfigureAwait(false);
-
-            await stdout.WriteLineAsync(
-                $"Device enrolled successfully. DeviceId={enrollResponse.DeviceId:D}, SiteId={enrollResponse.SiteId}, PolicyRevision={enrollResponse.PolicyRevision}, Thumbprint={thumbprint}")
-                .ConfigureAwait(false);
-            return 0;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        finally
         {
-            await stderr.WriteLineAsync($"Enrollment request failed: {ex.Message}").ConfigureAwait(false);
-            return 1;
+            if (ownsCertificate)
+            {
+                certificate?.Dispose();
+            }
         }
+    }
+
+    internal static EnrollDeviceRequest BuildEnrollDeviceRequest(
+        string token,
+        string hostname,
+        string thumbprint,
+        string? assetNumber,
+        string agentVersion,
+        X509Certificate2? certificate)
+    {
+        string? certPem = null;
+        string? popSignature = null;
+
+        if (certificate is not null && certificate.HasPrivateKey)
+        {
+            var tokenHash = EnrollmentTokenHasher.ComputeSha256Hex(token);
+            certPem = certificate.ExportCertificatePem();
+            popSignature = EnrollmentProofOfPossession.SignChallenge(certificate, tokenHash, hostname);
+        }
+
+        return new EnrollDeviceRequest(
+            token,
+            hostname,
+            thumbprint,
+            assetNumber,
+            agentVersion,
+            certPem,
+            popSignature);
     }
 
     internal static bool TryParseArgs(
@@ -227,7 +301,7 @@ public static class AgentEnrollmentBootstrapper
         return true;
     }
 
-    private static string GenerateAndInstallDevCertificate(string hostname)
+    private static X509Certificate2 GenerateAndInstallDevCertificate(string hostname)
     {
         using var rsa = RSA.Create(2048);
         var subject = new X500DistinguishedName($"CN=cordon-hive-dev-{hostname}");
@@ -244,7 +318,7 @@ public static class AgentEnrollmentBootstrapper
         var now = DateTimeOffset.UtcNow;
         using var ephemeralCert = certRequest.CreateSelfSigned(now.AddMinutes(-5), now.AddYears(1));
         var pfxBytes = ephemeralCert.Export(X509ContentType.Pfx);
-        using var persistedCert = X509CertificateLoader.LoadPkcs12(
+        var persistedCert = X509CertificateLoader.LoadPkcs12(
             pfxBytes,
             password: null,
             keyStorageFlags: X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet);
@@ -257,10 +331,10 @@ public static class AgentEnrollmentBootstrapper
         }
         catch
         {
-            // If certificate store write is restricted in sandboxed context, still return the thumbprint.
+            // If certificate store write is restricted in sandboxed context, still return the cert for PoP signing.
         }
 
-        return persistedCert.Thumbprint;
+        return persistedCert;
     }
 
     internal sealed record EnrollCliArgs(

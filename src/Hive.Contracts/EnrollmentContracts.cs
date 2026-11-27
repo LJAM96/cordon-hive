@@ -15,7 +15,9 @@ public sealed record EnrollDeviceRequest(
     string Hostname,
     string CertificateThumbprint,
     string? AssetNumber,
-    string AgentVersion);
+    string AgentVersion,
+    string? CertificatePem = null,
+    string? ProofOfPossessionSignatureBase64 = null);
 
 public sealed record EnrollDeviceResponse(
     Guid DeviceId,

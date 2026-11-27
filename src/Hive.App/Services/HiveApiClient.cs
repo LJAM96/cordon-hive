@@ -627,22 +627,134 @@ public sealed class HiveApiClient : IDisposable
                 return ApiResult<DeviceSummaryDto?>.Success(null, response.StatusCode);
             }
 
-            var updated = JsonSerializer.Deserialize<DeviceSummaryDto>(text, JsonOptions);
-            return ApiResult<DeviceSummaryDto?>.Success(updated, response.StatusCode);
-        }
-        catch (HttpRequestException ex)
-        {
-            return ApiResult<DeviceSummaryDto?>.Failure(ApiErrorKind.Offline, $"Unable to reach Hive server ({ex.Message}).");
-        }
-        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return ApiResult<DeviceSummaryDto?>.Failure(ApiErrorKind.Offline, "Request to Hive server timed out.");
-        }
-        catch (JsonException)
-        {
-            return ApiResult<DeviceSummaryDto?>.Failure(ApiErrorKind.InvalidResponse, "Received an invalid response payload from Hive server.");
-        }
+        var updated = JsonSerializer.Deserialize<DeviceSummaryDto>(text, JsonOptions);
+        return ApiResult<DeviceSummaryDto?>.Success(updated, response.StatusCode);
     }
+    catch (HttpRequestException ex)
+    {
+        return ApiResult<DeviceSummaryDto?>.Failure(ApiErrorKind.Offline, $"Unable to reach Hive server ({ex.Message}).");
+    }
+    catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return ApiResult<DeviceSummaryDto?>.Failure(ApiErrorKind.Offline, "Request to Hive server timed out.");
+    }
+    catch (JsonException)
+    {
+        return ApiResult<DeviceSummaryDto?>.Failure(ApiErrorKind.InvalidResponse, "Received an invalid response payload from Hive server.");
+    }
+}
+
+public Task<ApiResult<PagedResponse<AuditEventDto>>> GetAuditEventsAsync(
+    int page,
+    int pageSize,
+    string? siteId,
+    string? action,
+    string? actorId,
+    string? result,
+    CancellationToken cancellationToken = default)
+{
+    var query = BuildAuditQueryParameters(siteId, action, actorId, result);
+    query.Insert(0, $"pageSize={Math.Clamp(pageSize, 1, 200)}");
+    query.Insert(0, $"page={Math.Max(1, page)}");
+    return GetJsonAsync<PagedResponse<AuditEventDto>>(
+        $"{ProtocolConstants.ApiPrefix}/audit?{string.Join("&", query)}",
+        cancellationToken);
+}
+
+public Task<ApiResult<string>> ExportAuditAsync(
+    string format,
+    string? siteId,
+    string? action,
+    string? actorId,
+    string? result,
+    CancellationToken cancellationToken = default)
+{
+    var safeFormat = string.IsNullOrWhiteSpace(format) ? "csv" : format.Trim();
+    var query = BuildAuditQueryParameters(siteId, action, actorId, result);
+    query.Insert(0, $"format={Uri.EscapeDataString(safeFormat)}");
+    return GetTextAsync(
+        $"{ProtocolConstants.ApiPrefix}/audit/export?{string.Join("&", query)}",
+        cancellationToken);
+}
+
+public Task<ApiResult<OperationalStatusDto>> GetOperationalStatusAsync(
+    CancellationToken cancellationToken = default) =>
+    GetJsonAsync<OperationalStatusDto>(
+        $"{ProtocolConstants.ApiPrefix}/operations/status",
+        cancellationToken);
+
+public Task<ApiResult<EmergencyStopResponse>> SetEmergencyStopAsync(
+    EmergencyStopRequest request,
+    CancellationToken cancellationToken = default) =>
+    SendJsonAsync<EmergencyStopRequest, EmergencyStopResponse>(
+        HttpMethod.Post,
+        $"{ProtocolConstants.ApiPrefix}/operations/emergency-stop",
+        request,
+        attachBearerToken: true,
+        allowRefreshRetry: true,
+        includeIdempotencyHeader: true,
+        cancellationToken);
+
+private static List<string> BuildAuditQueryParameters(
+    string? siteId,
+    string? action,
+    string? actorId,
+    string? result)
+{
+    var query = new List<string>(6);
+    if (!string.IsNullOrWhiteSpace(siteId))
+    {
+        query.Add($"siteId={Uri.EscapeDataString(siteId.Trim())}");
+    }
+    if (!string.IsNullOrWhiteSpace(action))
+    {
+        query.Add($"action={Uri.EscapeDataString(action.Trim())}");
+    }
+    if (!string.IsNullOrWhiteSpace(actorId))
+    {
+        query.Add($"actorId={Uri.EscapeDataString(actorId.Trim())}");
+    }
+    if (!string.IsNullOrWhiteSpace(result))
+    {
+        query.Add($"result={Uri.EscapeDataString(result.Trim())}");
+    }
+    return query;
+}
+
+private async Task<ApiResult<string>> GetTextAsync(string relativePath, CancellationToken cancellationToken)
+{
+    try
+    {
+        using var response = await SendWithAuthRetryAsync(
+            () =>
+            {
+                var message = new HttpRequestMessage(HttpMethod.Get, BuildEndpointUri(relativePath));
+                message.Headers.Add(ProtocolConstants.CorrelationIdHeader, Guid.NewGuid().ToString("N"));
+                return message;
+            },
+            attachBearerToken: true,
+            allowRefreshRetry: true,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return MapHttpError<string>(
+                response.StatusCode,
+                await SafeReadErrorAsync(response, cancellationToken).ConfigureAwait(false));
+        }
+
+        var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        return ApiResult<string>.Success(content, response.StatusCode);
+    }
+    catch (HttpRequestException ex)
+    {
+        return ApiResult<string>.Failure(ApiErrorKind.Offline, $"Hive server unreachable on LAN ({ex.Message}).");
+    }
+    catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return ApiResult<string>.Failure(ApiErrorKind.Offline, "Hive server request timed out.");
+    }
+}
 
     private async Task<ApiResult<IReadOnlyList<T>>> GetListAsync<T>(
         string relativePath,

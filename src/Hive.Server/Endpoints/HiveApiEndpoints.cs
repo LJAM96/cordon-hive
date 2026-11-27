@@ -8,8 +8,19 @@ using Hive.Domain.Telemetry;
 using Hive.Infrastructure.Repositories;
 using Hive.Server.Authentication;
 using Hive.Server.Middleware;
+using Microsoft.Extensions.Options;
 
 namespace Hive.Server.Endpoints;
+
+public sealed class EnrollmentOptions
+{
+    public const string SectionName = "Enrollment";
+
+    public bool? RequireProofOfPossession { get; set; }
+
+    public bool IsProofOfPossessionRequired(IHostEnvironment environment) =>
+        RequireProofOfPossession ?? environment.IsProduction();
+}
 
 public static class HiveApiEndpoints
 {
@@ -66,6 +77,7 @@ public static class HiveApiEndpoints
         api.MapNotificationEndpoints();
         api.MapRemoteAccessEndpoints();
         api.MapDeploymentEndpoints();
+        endpoints.MapOperationsEndpoints();
 
         return endpoints;
     }
@@ -152,6 +164,8 @@ public static class HiveApiEndpoints
         IEnrollmentTokenRepository tokenRepository,
         IAuditRepository auditRepository,
         IOutboxRepository outboxRepository,
+        IOptions<EnrollmentOptions> enrollmentOptions,
+        IHostEnvironment hostEnvironment,
         TimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
@@ -165,6 +179,48 @@ public static class HiveApiEndpoints
 
         var nowUtc = timeProvider.GetUtcNow();
         var tokenHash = EnrollmentTokenHasher.ComputeSha256Hex(request.Token);
+        var requirePoP = enrollmentOptions.Value.IsProofOfPossessionRequired(hostEnvironment);
+        var hasPoPInput = !string.IsNullOrWhiteSpace(request.CertificatePem) ||
+                          !string.IsNullOrWhiteSpace(request.ProofOfPossessionSignatureBase64);
+
+        if (requirePoP || hasPoPInput)
+        {
+            if (!EnrollmentProofOfPossession.Verify(
+                    request.CertificatePem,
+                    request.ProofOfPossessionSignatureBase64,
+                    request.CertificateThumbprint,
+                    tokenHash,
+                    request.Hostname,
+                    nowUtc,
+                    out var reasonCode))
+            {
+                var tokenRecord = await tokenRepository.GetByHashAsync(tokenHash, cancellationToken);
+                await auditRepository.AppendAsync(
+                    AuditEvent.Create(
+                        "Device",
+                        request.Hostname.Trim(),
+                        "DeviceEnrollmentPoPFailed",
+                        "Device",
+                        request.CertificateThumbprint.Trim(),
+                        "Denied",
+                        tokenRecord?.SiteId,
+                        CorrelationIdMiddleware.GetCorrelationId(context),
+                        nowUtc,
+                        JsonSerializer.Serialize(new
+                        {
+                            hostname = request.Hostname.Trim(),
+                            thumbprint = request.CertificateThumbprint.Trim(),
+                            reasonCode
+                        })),
+                    cancellationToken);
+
+                return Problem(
+                    StatusCodes.Status401Unauthorized,
+                    "Enrollment proof-of-possession failed",
+                    $"Certificate proof-of-possession verification failed ({reasonCode}).");
+            }
+        }
+
         var result = await tokenRepository.RedeemAndEnrollAsync(
             tokenHash,
             request.Hostname,
@@ -660,6 +716,11 @@ public static class HiveApiEndpoints
         int? page,
         int? pageSize,
         string? siteId,
+        string? action,
+        string? actorId,
+        string? result,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
         HttpContext context,
         IAuditRepository auditRepository,
         CancellationToken cancellationToken)
@@ -675,6 +736,11 @@ public static class HiveApiEndpoints
             return ForbiddenProblem("Caller is not authorized to query audit events for the requested site.");
         }
 
+        if (fromUtc.HasValue && toUtc.HasValue && fromUtc.Value > toUtc.Value)
+        {
+            return ValidationProblem("fromUtc must be earlier than or equal to toUtc.");
+        }
+
         var safePage = Math.Max(1, page ?? 1);
         var safePageSize = Math.Clamp(pageSize ?? 50, 1, 200);
 
@@ -684,6 +750,11 @@ public static class HiveApiEndpoints
             string.IsNullOrWhiteSpace(siteId) ? null : siteId.Trim(),
             actor.AllowedSiteIds,
             actor.AllSitesAccess,
+            action,
+            actorId,
+            result,
+            fromUtc,
+            toUtc,
             cancellationToken);
 
         var dtos = items

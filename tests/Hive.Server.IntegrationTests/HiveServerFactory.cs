@@ -22,12 +22,18 @@ public sealed class HiveServerFactory : WebApplicationFactory<Program>
 {
     public MutableTimeProvider Clock { get; } = new();
 
+    public bool RequireEnrollmentProofOfPossession { get; init; }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("Storage:Provider", "InMemory");
         builder.UseSetting("Authentication:EnableTestingHeaderAuth", "true");
         builder.UseSetting("EscrowVault:MasterKey", "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=");
+        if (RequireEnrollmentProofOfPossession)
+        {
+            builder.UseSetting("Enrollment:RequireProofOfPossession", "true");
+        }
 
         builder.ConfigureServices(services =>
         {

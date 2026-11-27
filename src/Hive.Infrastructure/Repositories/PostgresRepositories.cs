@@ -702,6 +702,11 @@ public sealed class PostgresAuditRepository : IAuditRepository
         string? siteId = null,
         IReadOnlySet<string>? allowedSiteIds = null,
         bool allSites = false,
+        string? action = null,
+        string? actorId = null,
+        string? result = null,
+        DateTimeOffset? fromUtc = null,
+        DateTimeOffset? toUtc = null,
         CancellationToken cancellationToken = default)
     {
         var safePage = Math.Max(1, page);
@@ -715,23 +720,73 @@ public sealed class PostgresAuditRepository : IAuditRepository
         {
             if (!string.IsNullOrWhiteSpace(siteId))
             {
-                command.Parameters.AddWithValue("site_id", siteId);
+                command.Parameters.AddWithValue("site_id", siteId.Trim());
             }
 
             if (!allSites && allowedSiteIds is not null)
             {
                 command.Parameters.AddWithValue("allowed_sites", allowedSiteIds.ToArray());
             }
+
+            if (!string.IsNullOrWhiteSpace(action))
+            {
+                command.Parameters.AddWithValue("action", action.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(actorId))
+            {
+                command.Parameters.AddWithValue("actor_id", actorId.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                command.Parameters.AddWithValue("result", result.Trim());
+            }
+
+            if (fromUtc.HasValue)
+            {
+                command.Parameters.AddWithValue("from_utc", fromUtc.Value);
+            }
+
+            if (toUtc.HasValue)
+            {
+                command.Parameters.AddWithValue("to_utc", toUtc.Value);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(siteId))
         {
-            where.Append(" AND site_id = @site_id");
+            where.Append(" AND lower(site_id) = lower(@site_id)");
         }
 
         if (!allSites && allowedSiteIds is not null)
         {
             where.Append(" AND site_id IS NOT NULL AND site_id = ANY(@allowed_sites)");
+        }
+
+        if (!string.IsNullOrWhiteSpace(action))
+        {
+            where.Append(" AND lower(action) = lower(@action)");
+        }
+
+        if (!string.IsNullOrWhiteSpace(actorId))
+        {
+            where.Append(" AND lower(actor_id) = lower(@actor_id)");
+        }
+
+        if (!string.IsNullOrWhiteSpace(result))
+        {
+            where.Append(" AND lower(result) = lower(@result)");
+        }
+
+        if (fromUtc.HasValue)
+        {
+            where.Append(" AND occurred_at_utc >= @from_utc");
+        }
+
+        if (toUtc.HasValue)
+        {
+            where.Append(" AND occurred_at_utc <= @to_utc");
         }
 
         int totalCount;
@@ -844,6 +899,15 @@ public sealed class PostgresOutboxRepository : IOutboxRepository
         }
 
         return items;
+    }
+
+    public async Task<long> CountPendingAsync(CancellationToken cancellationToken = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM outbox_events WHERE dispatched_at_utc IS NULL;";
+        var result = await cmd.ExecuteScalarAsync(cancellationToken);
+        return Convert.ToInt64(result);
     }
 
     public async Task MarkDispatchedAsync(Guid eventId, DateTimeOffset dispatchedAtUtc, CancellationToken cancellationToken = default)

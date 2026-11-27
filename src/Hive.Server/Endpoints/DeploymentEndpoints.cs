@@ -690,6 +690,7 @@ public static class DeploymentEndpoints
         HttpContext context,
         IDeviceRepository deviceRepository,
         IDeploymentRepository deploymentRepository,
+        DeploymentControlState controlState,
         TimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
@@ -717,6 +718,21 @@ public static class DeploymentEndpoints
         if (target.DeviceId != deviceId)
         {
             return HiveApiEndpoints.ForbiddenProblem("Deployment target belongs to another device.");
+        }
+
+        var control = controlState.GetSnapshot();
+        if (control.DeploymentsPaused)
+        {
+            var reasonDetail = string.IsNullOrWhiteSpace(control.PauseReason)
+                ? "Deployments are paused due to an active emergency stop."
+                : $"Deployments are paused due to an active emergency stop ({control.PauseReason}).";
+            return Results.Ok(new DeploymentLeaseResponse(
+                false,
+                targetId,
+                null,
+                null,
+                "deployments_paused_emergency_stop",
+                reasonDetail));
         }
 
         IReadOnlyCollection<string>? protectedProcesses = null;

@@ -423,6 +423,11 @@ public sealed class InMemoryAuditRepository : IAuditRepository
         string? siteId = null,
         IReadOnlySet<string>? allowedSiteIds = null,
         bool allSites = false,
+        string? action = null,
+        string? actorId = null,
+        string? result = null,
+        DateTimeOffset? fromUtc = null,
+        DateTimeOffset? toUtc = null,
         CancellationToken cancellationToken = default)
     {
         var safePage = Math.Max(1, page);
@@ -434,12 +439,41 @@ public sealed class InMemoryAuditRepository : IAuditRepository
 
             if (!string.IsNullOrWhiteSpace(siteId))
             {
-                query = query.Where(e => string.Equals(e.SiteId, siteId, StringComparison.OrdinalIgnoreCase));
+                var trimmedSite = siteId.Trim();
+                query = query.Where(e => string.Equals(e.SiteId, trimmedSite, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!allSites && allowedSiteIds is not null)
             {
                 query = query.Where(e => !string.IsNullOrWhiteSpace(e.SiteId) && allowedSiteIds.Contains(e.SiteId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(action))
+            {
+                var trimmedAction = action.Trim();
+                query = query.Where(e => string.Equals(e.Action, trimmedAction, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(actorId))
+            {
+                var trimmedActorId = actorId.Trim();
+                query = query.Where(e => string.Equals(e.ActorId, trimmedActorId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                var trimmedResult = result.Trim();
+                query = query.Where(e => string.Equals(e.Result, trimmedResult, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (fromUtc.HasValue)
+            {
+                query = query.Where(e => e.OccurredAtUtc >= fromUtc.Value);
+            }
+
+            if (toUtc.HasValue)
+            {
+                query = query.Where(e => e.OccurredAtUtc <= toUtc.Value);
             }
 
             var ordered = query
@@ -487,6 +521,15 @@ public sealed class InMemoryOutboxRepository : IOutboxRepository
                 .Take(safeLimit)
                 .ToList();
             return Task.FromResult(pending);
+        }
+    }
+
+    public Task<long> CountPendingAsync(CancellationToken cancellationToken = default)
+    {
+        lock (_store.SyncRoot)
+        {
+            long count = _store.OutboxEvents.LongCount(e => e.DispatchedAtUtc is null);
+            return Task.FromResult(count);
         }
     }
 

@@ -26,6 +26,11 @@ public interface ITelemetryRepository
         Guid deviceId,
         int sampleLimit,
         CancellationToken cancellationToken = default);
+
+    Task<(int DeletedMetricSamples, int DeletedProcessSnapshots)> PruneExpiredAsync(
+        DateTimeOffset metricsCutoffUtc,
+        DateTimeOffset processSnapshotsCutoffUtc,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class InMemoryTelemetryRepository : ITelemetryRepository
@@ -133,6 +138,41 @@ public sealed class InMemoryTelemetryRepository : ITelemetryRepository
                 samples,
                 volumes,
                 state.LatestProcessSnapshot));
+        }
+    }
+
+    public Task<(int DeletedMetricSamples, int DeletedProcessSnapshots)> PruneExpiredAsync(
+        DateTimeOffset metricsCutoffUtc,
+        DateTimeOffset processSnapshotsCutoffUtc,
+        CancellationToken cancellationToken = default)
+    {
+        lock (_syncRoot)
+        {
+            var deletedMetricSamples = 0;
+            var deletedProcessSnapshots = 0;
+
+            foreach (var state in _byDevice.Values)
+            {
+                for (var i = state.Samples.Count - 1; i >= 0; i--)
+                {
+                    var sample = state.Samples[i];
+                    if (sample.SampledAtUtc < metricsCutoffUtc)
+                    {
+                        state.SeenSampleKeys.Remove((sample.BootId, sample.SampleSequence));
+                        state.Samples.RemoveAt(i);
+                        deletedMetricSamples++;
+                    }
+                }
+
+                if (state.LatestProcessSnapshot is not null &&
+                    state.LatestProcessSnapshot.SampledAtUtc < processSnapshotsCutoffUtc)
+                {
+                    state.LatestProcessSnapshot = null;
+                    deletedProcessSnapshots++;
+                }
+            }
+
+            return Task.FromResult((deletedMetricSamples, deletedProcessSnapshots));
         }
     }
 
@@ -358,5 +398,37 @@ public sealed class PostgresTelemetryRepository : ITelemetryRepository
         }
 
         return new DeviceTelemetrySnapshot(samples, volumes, latestProcessSnapshot);
+    }
+
+    public async Task<(int DeletedMetricSamples, int DeletedProcessSnapshots)> PruneExpiredAsync(
+        DateTimeOffset metricsCutoffUtc,
+        DateTimeOffset processSnapshotsCutoffUtc,
+        CancellationToken cancellationToken = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        int deletedMetricSamples;
+        await using (var metricsCmd = conn.CreateCommand())
+        {
+            metricsCmd.CommandText = """
+                DELETE FROM device_metrics
+                WHERE sampled_at_utc < @metricsCutoff;
+                """;
+            metricsCmd.Parameters.AddWithValue("metricsCutoff", metricsCutoffUtc);
+            deletedMetricSamples = await metricsCmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        int deletedProcessSnapshots;
+        await using (var procCmd = conn.CreateCommand())
+        {
+            procCmd.CommandText = """
+                DELETE FROM device_process_snapshots
+                WHERE sampled_at_utc < @processCutoff;
+                """;
+            procCmd.Parameters.AddWithValue("processCutoff", processSnapshotsCutoffUtc);
+            deletedProcessSnapshots = await procCmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        return (deletedMetricSamples, deletedProcessSnapshots);
     }
 }

@@ -48,6 +48,7 @@ public sealed class ResumablePackageDownloader
 
         var fullDestination = Path.GetFullPath(destinationPath);
         var partPath = $"{fullDestination}.part";
+        var etagPath = $"{fullDestination}.part.etag";
         var parentDir = Path.GetDirectoryName(fullDestination);
         if (!string.IsNullOrEmpty(parentDir))
         {
@@ -55,23 +56,90 @@ public sealed class ResumablePackageDownloader
         }
 
         var existingOffset = 0L;
+        string? expectedEtag = null;
         if (File.Exists(partPath))
         {
             existingOffset = new FileInfo(partPath).Length;
+            expectedEtag = TryReadTrimmedText(etagPath);
+        }
+        else
+        {
+            TryDeleteFile(etagPath);
         }
 
+        var (response, transportError) = await SendDownloadRequestAsync(
+            packageUri,
+            existingOffset,
+            expectedEtag,
+            cancellationToken).ConfigureAwait(false);
+
+        if (transportError is not null)
+        {
+            return transportError;
+        }
+
+        if (existingOffset > 0 &&
+            ((response!.StatusCode == HttpStatusCode.PartialContent && IsEtagMismatch(expectedEtag, response.Headers.ETag)) ||
+             response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable))
+        {
+            response.Dispose();
+            TryDeleteFile(partPath);
+            TryDeleteFile(etagPath);
+
+            var (retryResponse, retryError) = await SendDownloadRequestAsync(
+                packageUri,
+                existingOffset: 0,
+                expectedEtag: null,
+                cancellationToken).ConfigureAwait(false);
+
+            if (retryError is not null)
+            {
+                return retryError;
+            }
+
+            return await WriteAndVerifyResponseAsync(
+                retryResponse!,
+                fullDestination,
+                partPath,
+                etagPath,
+                existingOffset: 0,
+                expectedSha256,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return await WriteAndVerifyResponseAsync(
+            response!,
+            fullDestination,
+            partPath,
+            etagPath,
+            existingOffset,
+            expectedSha256,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<(HttpResponseMessage? Response, PackageDownloadResult? Error)> SendDownloadRequestAsync(
+        Uri packageUri,
+        long existingOffset,
+        string? expectedEtag,
+        CancellationToken cancellationToken)
+    {
         using var request = new HttpRequestMessage(HttpMethod.Get, packageUri);
         if (existingOffset > 0)
         {
             request.Headers.Range = new RangeHeaderValue(existingOffset, null);
+            if (!string.IsNullOrWhiteSpace(expectedEtag) &&
+                EntityTagHeaderValue.TryParse(expectedEtag, out var parsedEtag))
+            {
+                request.Headers.IfRange = new RangeConditionHeaderValue(parsedEtag);
+            }
         }
 
-        HttpResponseMessage response;
         try
         {
-            response = await _httpClient
+            var response = await _httpClient
                 .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
+            return (response, null);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -79,15 +147,25 @@ public sealed class ResumablePackageDownloader
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException)
         {
-            return new PackageDownloadResult(
+            return (null, new PackageDownloadResult(
                 Success: false,
                 ReasonCode: "download_transport_error",
                 DestinationPath: null,
                 BytesOnDisk: existingOffset,
                 ActualSha256: null,
-                Message: $"Package download transport error: {ex.Message}");
+                Message: $"Package download transport error: {ex.Message}"));
         }
+    }
 
+    private static async Task<PackageDownloadResult> WriteAndVerifyResponseAsync(
+        HttpResponseMessage response,
+        string fullDestination,
+        string partPath,
+        string etagPath,
+        long existingOffset,
+        string expectedSha256,
+        CancellationToken cancellationToken)
+    {
         using (response)
         {
             FileMode writeMode;
@@ -108,6 +186,15 @@ public sealed class ResumablePackageDownloader
                     BytesOnDisk: existingOffset,
                     ActualSha256: null,
                     Message: $"Package download failed with HTTP {(int)response.StatusCode} ({response.StatusCode}).");
+            }
+
+            if (response.Headers.ETag is not null)
+            {
+                TryWriteText(etagPath, response.Headers.ETag.ToString());
+            }
+            else if (writeMode == FileMode.Create)
+            {
+                TryDeleteFile(etagPath);
             }
 
             try
@@ -162,6 +249,7 @@ public sealed class ResumablePackageDownloader
         if (!string.Equals(actualSha256, expectedSha256.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             TryDeleteFile(partPath);
+            TryDeleteFile(etagPath);
             TryDeleteFile(fullDestination);
             return new PackageDownloadResult(
                 Success: false,
@@ -173,6 +261,7 @@ public sealed class ResumablePackageDownloader
         }
 
         File.Move(partPath, fullDestination, overwrite: true);
+        TryDeleteFile(etagPath);
 
         return new PackageDownloadResult(
             Success: true,
@@ -181,6 +270,46 @@ public sealed class ResumablePackageDownloader
             BytesOnDisk: totalBytes,
             ActualSha256: actualSha256,
             Message: "Package downloaded and SHA-256 verified.");
+    }
+
+    private static bool IsEtagMismatch(string? expectedEtag, EntityTagHeaderValue? responseEtag)
+    {
+        if (string.IsNullOrWhiteSpace(expectedEtag) || responseEtag is null)
+        {
+            return false;
+        }
+
+        return !string.Equals(expectedEtag.Trim(), responseEtag.ToString().Trim(), StringComparison.Ordinal);
+    }
+
+    private static string? TryReadTrimmedText(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            var content = File.ReadAllText(path).Trim();
+            return string.IsNullOrEmpty(content) ? null : content;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    private static void TryWriteText(string path, string content)
+    {
+        try
+        {
+            File.WriteAllText(path, content);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Best-effort ETag sidecar persistence.
+        }
     }
 
     private static void TryDeleteFile(string path)

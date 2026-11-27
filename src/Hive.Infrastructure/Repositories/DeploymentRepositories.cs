@@ -371,6 +371,15 @@ public interface IDeploymentRepository
     Task<IReadOnlyList<DeploymentAttempt>> ListAttemptsAsync(
         Guid targetId,
         CancellationToken cancellationToken = default);
+
+    Task<int> InvalidateAllActiveLeasesAsync(
+        string reasonCode,
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken = default);
+
+    Task<int> CountActiveLeasesAsync(
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken = default);
 }
 
 internal static class DeploymentRepositoryHelpers
@@ -926,6 +935,62 @@ public sealed class InMemoryDeploymentRepository : IDeploymentRepository
             }
 
             return Task.FromResult<IReadOnlyList<DeploymentAttempt>>(Array.Empty<DeploymentAttempt>());
+        }
+    }
+
+    public Task<int> InvalidateAllActiveLeasesAsync(
+        string reasonCode,
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedReason = string.IsNullOrWhiteSpace(reasonCode)
+            ? "emergency_stop_invalidated"
+            : reasonCode.Trim();
+
+        lock (_store.SyncRoot)
+        {
+            var invalidated = 0;
+            var targetIds = _store.DeploymentTargets.Keys.ToList();
+            foreach (var targetId in targetIds)
+            {
+                var target = _store.DeploymentTargets[targetId];
+                if (target.ActiveLeaseId is null && target.LeaseExpiresUtc is null)
+                {
+                    continue;
+                }
+
+                var nextState = target.State == DeploymentState.Installing
+                    ? DeploymentState.Unknown
+                    : target.State;
+
+                _store.DeploymentTargets[targetId] = target with
+                {
+                    State = nextState,
+                    ActiveLeaseId = null,
+                    LeaseExpiresUtc = null,
+                    LastReasonCode = normalizedReason,
+                    LastMessage = "Deployment lease invalidated by emergency stop.",
+                    UpdatedUtc = nowUtc
+                };
+
+                invalidated++;
+            }
+
+            return Task.FromResult(invalidated);
+        }
+    }
+
+    public Task<int> CountActiveLeasesAsync(
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken = default)
+    {
+        lock (_store.SyncRoot)
+        {
+            var count = _store.DeploymentTargets.Values.Count(t =>
+                t.ActiveLeaseId is not null &&
+                t.LeaseExpiresUtc is DateTimeOffset exp &&
+                exp > nowUtc);
+            return Task.FromResult(count);
         }
     }
 }
@@ -1681,6 +1746,50 @@ public sealed class PostgresDeploymentRepository : IDeploymentRepository
         }
 
         return attempts;
+    }
+
+    public async Task<int> InvalidateAllActiveLeasesAsync(
+        string reasonCode,
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedReason = string.IsNullOrWhiteSpace(reasonCode)
+            ? "emergency_stop_invalidated"
+            : reasonCode.Trim();
+
+        await using var conn = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE deployment_targets
+            SET state = CASE WHEN state = 'Installing' THEN 'Unknown' ELSE state END,
+                active_lease_id = NULL,
+                lease_expires_utc = NULL,
+                last_reason_code = @reason_code,
+                last_message = 'Deployment lease invalidated by emergency stop.',
+                updated_at_utc = @now_utc
+            WHERE active_lease_id IS NOT NULL
+               OR lease_expires_utc IS NOT NULL;
+            """;
+        cmd.Parameters.AddWithValue("reason_code", normalizedReason);
+        cmd.Parameters.AddWithValue("now_utc", nowUtc);
+        return await cmd.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<int> CountActiveLeasesAsync(
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken = default)
+    {
+        await using var conn = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT COUNT(*)
+            FROM deployment_targets
+            WHERE active_lease_id IS NOT NULL
+              AND lease_expires_utc IS NOT NULL
+              AND lease_expires_utc > @now_utc;
+            """;
+        cmd.Parameters.AddWithValue("now_utc", nowUtc);
+        return Convert.ToInt32(await cmd.ExecuteScalarAsync(cancellationToken));
     }
 
     private static async Task InsertAttemptAsync(

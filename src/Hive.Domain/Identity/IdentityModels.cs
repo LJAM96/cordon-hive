@@ -175,6 +175,14 @@ public static class ScopeAuthorizationService
         actor.HasAnyRole(HiveRole.SoftwareAdmin, HiveRole.Administrator) &&
         actor.CanAccessSite(siteId);
 
+    public static bool CanOperateEmergencyStop(ActorIdentity actor) =>
+        !actor.IsDevice &&
+        actor.HasRole(HiveRole.Administrator);
+
+    public static bool CanViewOperationalHealth(ActorIdentity actor) =>
+        !actor.IsDevice &&
+        actor.HasAnyRole(HiveRole.Administrator, HiveRole.Auditor, HiveRole.Supervisor);
+
     public static bool CanSendHeartbeat(ActorIdentity actor, Guid deviceId) =>
         actor.IsDevice &&
         actor.DeviceId == deviceId;

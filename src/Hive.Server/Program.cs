@@ -48,9 +48,14 @@ builder.Services.Configure<PackageStorageOptions>(
     builder.Configuration.GetSection(PackageStorageOptions.SectionName));
 builder.Services.Configure<DeploymentSigningOptions>(
     builder.Configuration.GetSection(DeploymentSigningOptions.SectionName));
+builder.Services.Configure<TelemetryRetentionOptions>(
+    builder.Configuration.GetSection(TelemetryRetentionOptions.SectionName));
+builder.Services.Configure<EnrollmentOptions>(
+    builder.Configuration.GetSection(EnrollmentOptions.SectionName));
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<IPackageArtifactStore, FileSystemPackageArtifactStore>();
 builder.Services.AddSingleton<ReleaseSigningService>();
+builder.Services.AddSingleton<DeploymentControlState>();
 
 var storageProvider = builder.Configuration["Storage:Provider"];
 var connectionString = builder.Configuration.GetConnectionString("HivePostgres")
@@ -237,6 +242,8 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddHostedService<OutboxDispatcherService>();
+builder.Services.AddSingleton<TelemetryRetentionHostedService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<TelemetryRetentionHostedService>());
 
 var app = builder.Build();
 

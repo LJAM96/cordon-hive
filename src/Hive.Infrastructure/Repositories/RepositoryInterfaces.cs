@@ -135,6 +135,11 @@ public interface IAuditRepository
         string? siteId = null,
         IReadOnlySet<string>? allowedSiteIds = null,
         bool allSites = false,
+        string? action = null,
+        string? actorId = null,
+        string? result = null,
+        DateTimeOffset? fromUtc = null,
+        DateTimeOffset? toUtc = null,
         CancellationToken cancellationToken = default);
 }
 
@@ -143,6 +148,8 @@ public interface IOutboxRepository
     Task EnqueueAsync(OutboxEventRecord record, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<OutboxEventRecord>> GetPendingAsync(int limit = 100, CancellationToken cancellationToken = default);
+
+    Task<long> CountPendingAsync(CancellationToken cancellationToken = default);
 
     Task MarkDispatchedAsync(Guid eventId, DateTimeOffset dispatchedAtUtc, CancellationToken cancellationToken = default);
 }
