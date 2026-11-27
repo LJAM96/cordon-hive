@@ -28,7 +28,7 @@ Users may hold several roles. Role and asset scope are checked by the server. Su
 | FR06 | Non disruptive deployment | Protected workload or unknown safety state blocks installation; no automatic process termination or reboot |
 | FR07 | Notifications | Target user, device or group; native toast plus persistent taskbar indicator; server tracks acknowledgement and completion separately |
 | FR08 | Remote access | Launch native RDP over permitted LAN route in P6; tailnet route only in P8; distinct authorisation and session warning; no public RDP |
-| FR09 | Optional saved RDP credentials | Per supervisor OS credential storage or approved vault/LAPS workflow; never cleartext in application DB |
+| FR09 | Break-glass workstation credential escrow & assisted RDP | AES-256-GCM encrypted escrow using separate Linux Docker secret master key (`/run/secrets/hive_vault_master_key`); explicit write-only user/custodian updates; mandatory-reason audited reveal for physical sign-in; ephemeral `CredWriteW` assisted RDP; never cleartext in DB, logs, or `.rdp` files |
 | FR10 | Offline behaviour | Local telemetry and cached pending actions remain usable; reconnect reconciles missed messages without duplication |
 | FR11 | Audit | Attributable administrative actions and device outcomes with timestamps, correlation IDs and before/after state where relevant |
 | FR12 | Hybrid connectivity (deferred P8) | Remote agent reconnects without inbound agent port or internet exposure of management services; explicit policy controls eligibility |

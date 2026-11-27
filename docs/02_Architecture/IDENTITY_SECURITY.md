@@ -15,6 +15,7 @@ Enroll each agent through administrator-authorised one-time enrollment, unique d
 | CordonHiveSoftwareAdmins | Draft package/product, request approval, schedule approved releases |
 | CordonHiveSoftwareApprovers | Independent validation/release approval; separation from uploader where practicable |
 | CordonHiveRemoteAccess | Scoped RDP request, not automatic OS access |
+| CordonHiveBreakGlassCustodians | Scoped reason-audited break-glass workstation credential reveal & assisted RDP checkout (strictly separate from ordinary Supervisor/Auditor) |
 | CordonHiveAdministrators | Enrollment and platform policy; no implicit credential access |
 | CordonHiveAuditors | Scoped read-only audit |
 
@@ -27,7 +28,7 @@ Group mapping and scope configurable. Server resolves actor and resource scope p
 | Compromised agent | Unique certificate, device-scoped reads/writes, no peer API access, revocation, rate limits |
 | Compromised server/package share | Independent signed immutable manifest, approved signer allowlist, hash verification, restricted package broker, staged rings |
 | Malicious or mistaken administrator | Target preview, two-person approval, least privilege, audit, no arbitrary command channel |
-| Credential leakage | Default individual AD RDP identity; optional local OS vault or approved LAPS; no cleartext central passwords/logs |
+| Credential leakage | Default individual/Vault/LAPS RDP; P6 DFU break-glass escrow uses AES-256-GCM bound with AAD (`deviceId`, `credentialId`, `keyVersion`) + separate Docker secret key (`/run/secrets/hive_vault_master_key`), mandatory-reason audit, `no-store` headers, and ephemeral `CredWriteW` cleanup; never plaintext in DB/logs/SQLite/`.rdp` |
 | Untrusted local process | Named pipe ACL, impersonation/identity verification, bounded messages, per-session SID checks, no generic privileged execution |
 | Spoofed notification | Server authorisation, authenticated publishers, signed/verified policy where privileged, separate source attribution |
 | Stolen remote device | Device approval, encrypted disk, certificate/tailnet revocation, no cached privileged commands, no sensitive notification content in toast by default |

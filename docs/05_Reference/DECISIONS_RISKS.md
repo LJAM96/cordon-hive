@@ -13,7 +13,7 @@ All ADRs below are proposed; confirm with maintainer and organisational owners b
 | ADR07 | Tailscale deferred to P8, optional and policy-gated | Existing PostgreSQL host not on tailnet; P1–P7 LAN-only; P8 remote API reach without public RDP or direct client DB access; external control plane not airgapped |
 | ADR08 | Overlay default, Explorer child experimental | Preserve Alert look with lower shell coupling; transparent WinUI spike required |
 | ADR09 | Protected workloads fail closed | No forced app termination/reboot; mandatory updates may stay deferred |
-| ADR10 | Individual RDP credentials, OS vault/LAPS optional | Avoid shared password repository; policy limitations |
+| ADR10 | DFU break-glass encrypted escrow + ephemeral CredWriteW (P6), individual/LAPS optional | Supports urgent DFU evidential access when examiners are away (manual user/custodian updates, reason-audited plaintext reveal, RDP-as-user) via AES-256-GCM + separate Docker secret KEK (`/run/secrets/hive_vault_master_key`) |
 | ADR11 | Linux server deployed via Docker Stack (no AD join) | Confirmed by maintainer; cross-platform `.NET 10` non-root containers (`deploy/docker/`) run standalone on LAN without AD domain join, SPN, or keytab |
 | ADR12 | Local CI and phased rollout | Test on Windows and protect lab infrastructure; requires maintained test devices |
 

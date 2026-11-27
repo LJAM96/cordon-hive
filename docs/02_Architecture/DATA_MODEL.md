@@ -24,6 +24,7 @@ PostgreSQL is authoritative; SQLite is local cache/queue only. Use UUIDs, UTC ti
 | notification_recipients | notification_id + typed recipient key, delivery/read/ack/complete timestamps and version |
 | notification_deliveries | recipient key, device/session, delivery attempt, toast request outcome; not proof of reading |
 | outbox_events | event_id, sequence/partition, topic, recipient scope, payload, created/dispatched timestamps |
+| device_credential_escrow | credential_id PK, device_id unique FK, account_username, ciphertext_aes_gcm, nonce, tag, key_version, updated_by_sid, updated_at_utc; separate Docker secret KEK; never plaintext |
 | audit_events | event_id, actor type/id, action, object, result, correlation, UTC timestamps, redacted before/after |
 
 ## Version semantics
