@@ -1,0 +1,50 @@
+# Decision register and outstanding risks
+
+All ADRs below are proposed; confirm with maintainer and organisational owners before freezing implementation.
+
+| ADR | Proposed decision | Rationale / tradeoff |
+|---|---|---|
+| ADR01 | Cordon Hive | Product name confirmed by the user |
+| ADR02 | Single WinUI 3 app, separate service/broker | Native UX and privilege isolation; multiple process lifecycle complexity |
+| ADR03 | PostgreSQL behind API | Existing infrastructure, robust transactional data; MySQL also viable but not supported initially |
+| ADR04 | SignalR hints + durable sync | Fast updates with offline reliability; outbox and cursor complexity |
+| ADR05 | HTTPS package distribution, optional SMB intake | Remote resilience and narrower endpoint access; storage and streaming service needed |
+| ADR06 | Self-contained LocalJwt + device mTLS (AD/OIDC optional) | Works on standalone Linux + workgroup/AD workstations with zero IT AD changes; separates user JWT and machine mTLS trust |
+| ADR07 | Tailscale deferred to P8, optional and policy-gated | Existing PostgreSQL host not on tailnet; P1–P7 LAN-only; P8 remote API reach without public RDP or direct client DB access; external control plane not airgapped |
+| ADR08 | Overlay default, Explorer child experimental | Preserve Alert look with lower shell coupling; transparent WinUI spike required |
+| ADR09 | Protected workloads fail closed | No forced app termination/reboot; mandatory updates may stay deferred |
+| ADR10 | Individual RDP credentials, OS vault/LAPS optional | Avoid shared password repository; policy limitations |
+| ADR11 | Linux server deployed via Docker Stack (no AD join) | Confirmed by maintainer; cross-platform `.NET 10` non-root containers (`deploy/docker/`) run standalone on LAN without AD domain join, SPN, or keytab |
+| ADR12 | Local CI and phased rollout | Test on Windows and protect lab infrastructure; requires maintained test devices |
+
+## Risk register
+
+| Risk | Severity | Owner to confirm | Mitigation / gate |
+|---|---|---|---|
+| Privileged deployment supply chain compromise | Critical | Security/software lead | Independent signing, broker allowlist, approval, pilot, revocation; P5 |
+| Disrupted acquisition/processing | Critical | Quality/operations | Guard, protected locks, installer validation, manual fallback; P5 |
+| External access to isolated forensic environment | Critical | Network/security | Separate deployments, restrictive grants and firewall, approval; LAN isolation P0–P7, hybrid P8 |
+| Saved credentials exposed or misused | High | Identity/security | Individual AD, native vault/LAPS, no central secrets; P6 |
+| Remote AD unavailable | High | IT | Canonical hostname/SPN, DNS/routes, fail closed, device cert; P8 |
+| Explorer docking incompatibility | Medium | Desktop engineering | Default overlay/tray, isolated experimental mode; P0/P4 |
+| Staff privacy and case metadata leakage | High | Data protection/quality | Minimise collection, scopes, retention, safe toast; P2/P4 |
+| Inventory false compliance | High | Software lead | Detection provenance, version semantics, unknown state; P3 |
+| Offline notification falsely cleared | High | Engineering | Durable cache, idempotency, server completion; P4 |
+| Update race/installer ignores no-reboot | Critical | Software lead | Final check, cooperative guard, manual-only where uncertain; P5 |
+| Package storage/DB exhaustion | Medium | Infrastructure | Quotas, retention, staged cache, capacity tests; P7 |
+| Linux container secret or TLS/JWT configuration drift | High | Infrastructure/Security | Non-root read-only containers, Docker secrets (`0400`), Production fail-closed DB/key checks, automated auth negative tests; P1/P7 |
+
+## Questions requiring confirmation
+
+* Final product name, repo destination, supported Windows client editions/builds and number of devices/sites.
+* Linux server distribution and Docker Swarm vs Compose mode (standalone Linux + Docker Stack + LocalJwt confirmed), existing PostgreSQL version, storage capacity and internal PKI certificate issuance.
+* P8 only: whether remote use is permitted at all, approved tailnet tenant, data-handling constraints and network segmentation.
+* RDP host policy, session interruption tolerances, whether saved credentials or LAPS permitted.
+* Actual forensic products/versions, installer types, vendor license terms, validation evidence workflow and reliable workload signals.
+* Retention, privacy assessment, audit access and notification visibility rules.
+* Whether to maintain Cordon Alert separately or later migrate its widget into shared library; ownership/licensing of source/assets.
+* Target performance budgets, recovery objectives and local CI/test hardware.
+
+## Explicit limitations
+
+No code, deployment, compile, GUI prototype, DB migration or Windows tests have been performed by this documentation exercise. Source review was limited to relevant Cordon Alert files. Technical references support design decisions, not compatibility guarantees. Sample policies, schemas, names, metrics and frequencies require validation. No accreditation, information security or organisational approval is implied.

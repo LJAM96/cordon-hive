@@ -1,0 +1,91 @@
+version: "3.8"
+
+# Cordon Hive LAN-only Linux Docker Stack (Self-Contained LocalJwt + Device mTLS)
+# Deploy: docker stack deploy -c deploy/docker/docker-stack.yml cordon-hive
+# Note: PostgreSQL stays external on the private LAN; workstations never connect to PostgreSQL directly.
+# Zero Active Directory domain join, SPN, or keytab required.
+
+services:
+  hive-server:
+    image: ${HIVE_IMAGE:-cordon-hive-server:local}
+    ports:
+      - target: 8443
+        published: 443
+        protocol: tcp
+        mode: host
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "https://+:8443;http://+:8080"
+      Storage__Provider: "PostgreSQL"
+      Authentication__UserMode: "LocalJwt"
+      BootstrapAdmin__Username: "${HIVE_BOOTSTRAP_ADMIN_USER:-hive-admin}"
+      Tls__CertificatePath: "/run/secrets/hive_tls_cert"
+      Tls__PrivateKeyPath: "/run/secrets/hive_tls_key"
+      ArtifactStorage__RootPath: "/var/lib/hive/artifacts"
+      SSL_CERT_FILE: "/etc/hive/internal-ca.crt"
+    secrets:
+      - source: hive_db_connection_string
+        target: hive_db_connection_string
+        mode: 0400
+      - source: hive_jwt_signing_key
+        target: hive_jwt_signing_key
+        mode: 0400
+      - source: hive_tls_cert
+        target: hive_tls_cert
+        mode: 0444
+      - source: hive_tls_key
+        target: hive_tls_key
+        mode: 0400
+      - source: hive_bootstrap_admin_password
+        target: hive_bootstrap_admin_password
+        mode: 0400
+    volumes:
+      - type: bind
+        source: ${HIVE_INTERNAL_CA_PATH:-/etc/cordon-hive/internal-ca.crt}
+        target: /etc/hive/internal-ca.crt
+        read_only: true
+      - type: volume
+        source: hive_artifacts
+        target: /var/lib/hive/artifacts
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - hive_lan
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+secrets:
+  hive_db_connection_string:
+    external: true
+  hive_jwt_signing_key:
+    external: true
+  hive_tls_cert:
+    external: true
+  hive_tls_key:
+    external: true
+  hive_bootstrap_admin_password:
+    external: true
+
+volumes:
+  hive_artifacts:
+    driver: local
+
+networks:
+  hive_lan:
+    driver: overlay

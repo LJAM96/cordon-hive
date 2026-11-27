@@ -1,0 +1,39 @@
+# Build outputs
+bin/
+obj/
+out/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# NuGet / Packages
+*.nupkg
+*.snupkg
+packages/
+
+# Local databases, logs, and runtime data
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.log
+logs/
+
+# Secrets and local overrides (never commit credentials or keys)
+appsettings.Development.json
+appsettings.Local.json
+*.pfx
+*.p12
+*.key
+*.pem
+.env
