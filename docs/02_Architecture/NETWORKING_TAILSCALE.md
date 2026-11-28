@@ -10,18 +10,18 @@ In P8, preferably connect the Linux Docker host (not PostgreSQL) to the approved
 
 | Mode | Transport | Constraints |
 |---|---|---|
-| LAN | Internal HTTPS, AD DNS, local RDP | No Tailscale required |
+| LAN | Internal HTTPS, internal DNS, local RDP | No Tailscale required |
 | Hybrid (P8 only) | Approved organisational tailnet plus LAN | External control plane, possible DERP relay; policy approval required |
 | Isolated | Separate internal network and deployment instance | No externally connected node, subnet router or shared gateway bridging evidence network |
 
-Prefer one canonical HTTPS service hostname and SPN, with approved split DNS/routing resolving the same service over LAN or tailnet. Do not silently switch to a raw IP/alternate name that breaks Kerberos or TLS. Probe only configured endpoints with bounded backoff. Record active path, last successful contact and reachability. Agent initiates outbound connection; no inbound agent listener. Tailscale is optional independently managed software, not a bundled identity system.
+Prefer one canonical HTTPS service hostname (SPN only for optional Negotiate), with approved split DNS/routing resolving the same service over LAN or tailnet. Do not silently switch to a raw IP/alternate name that breaks Kerberos or TLS. Probe only configured endpoints with bounded backoff. Record active path, last successful contact and reachability. Agent initiates outbound connection; no inbound agent listener. Tailscale is optional independently managed software, not a bundled identity system.
 
 ## Access matrix
 
 | Source | Destination | Port/protocol | Rule |
 |---|---|---|---|
 | Managed device | Hive API/package endpoint | TCP 443 | Allow scoped device access |
-| User/supervisor workstation | API | TCP 443 | Allow; AD/application permissions still required |
+| User/supervisor workstation | API | TCP 443 | Allow; Hive application permissions (optional AD) still required |
 | Approved supervisor endpoints | Approved managed devices | TCP 3389 (UDP optional after testing) | Allow only RDP-authorised group/asset scope, Windows firewall + NLA |
 | Remote domain member | Approved AD/DNS endpoints | Organisation-defined AD ports | Only if necessary, route narrowly and test Kerberos/DNS/time |
 | Server | PostgreSQL | TCP 5432 | Private server network only |

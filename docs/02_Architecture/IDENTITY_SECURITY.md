@@ -8,7 +8,7 @@ Enroll each agent through administrator-authorised one-time enrollment, unique d
 
 ## Permissions
 
-| AD group (example) | Permission |
+| Capability / optional AD group mapping (example) | Permission |
 |---|---|
 | CordonHiveUsers | Own/authorised session and device information; own acknowledgements |
 | CordonHiveSupervisors | Scoped inventory, assignments, communications |
@@ -19,7 +19,7 @@ Enroll each agent through administrator-authorised one-time enrollment, unique d
 | CordonHiveAdministrators | Enrollment and platform policy; no implicit credential access |
 | CordonHiveAuditors | Scoped read-only audit |
 
-Group mapping and scope configurable. Server resolves actor and resource scope per operation; client visibility is not security. Re-evaluate permissions on sensitive commands and reconnect. No client-side role claims trusted. Separate publishing and signing keys; privileged actions attributable to individual accounts, not shared logins.
+LocalJwt roles and scope are authoritative by default; optional AD group mapping is configurable. Server resolves actor and resource scope per operation; client visibility is not security. Re-evaluate permissions on sensitive commands and reconnect. No client-side role claims trusted. Separate publishing and signing keys; privileged actions attributable to individual accounts, not shared logins.
 
 ## Threat model
 

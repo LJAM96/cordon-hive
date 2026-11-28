@@ -32,3 +32,6 @@ Initial test targets: average agent CPU <1% on representative idle workstation, 
 ## Acceptance
 
 Benchmark with agent disabled/enabled across idle, hashing, imaging, video processing and low-space workloads using representative non-evidential test data. Measure throughput, CPU, memory, disk and network. No evidence writes, no application repairs, no unbounded collection. Test service crash, GUI close, sleep, boot, RDP sessions, time drift, missing counters, denied process access and network failure.
+
+## Expansion
+See [Fleet intelligence](FLEET_INTELLIGENCE.md) and [Forensic operations](FORENSIC_OPERATIONS.md). Existing collector budgets, local protection, unknown/stale semantics and evidence minimisation remain mandatory.

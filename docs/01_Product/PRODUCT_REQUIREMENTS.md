@@ -2,7 +2,7 @@
 
 ## Purpose and scope
 
-One native Windows application serves both supervisors and standard users. A separate service monitors each managed device irrespective of interactive login. Central administration uses existing AD identities and PostgreSQL. The initial platform supports LAN operation only (P1–P7). Optional organisational tailnet connectivity for approved remote devices is deferred to P8 after LAN acceptance; the existing PostgreSQL server is not currently on Tailscale. It is not a forensic acquisition tool, generic remote shell, EDR replacement or proof of ISO/IEC 17025 compliance.
+One native Windows application serves both supervisors and standard users. A separate service monitors each managed device irrespective of interactive login. Central administration uses self-contained Local Hive Accounts (LocalJwt) and PostgreSQL; AD/Negotiate is optional. The initial platform supports LAN operation only (P1–P7). Optional organisational tailnet connectivity for approved remote devices is deferred to P8 after LAN acceptance; the existing PostgreSQL server is not currently on Tailscale. It is not a forensic acquisition tool, generic remote shell, EDR replacement or proof of ISO/IEC 17025 compliance.
 
 ## Personas
 
@@ -20,7 +20,7 @@ Users may hold several roles. Role and asset scope are checked by the server. Su
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| FR01 | Single WinUI app, integrated Windows authentication | Same package shows different navigation for different authorised AD users; direct API calls outside scope denied |
+| FR01 | Single WinUI app, LocalJwt authentication (optional Negotiate) | Same package shows different navigation for different authorised Hive users; direct API calls outside scope denied |
 | FR02 | Asset registration and allocation | Stable device UUID survives IP, name and user changes; duplicate asset labels are flagged; assigned and actual user distinct |
 | FR03 | Continuous monitoring | Service reports CPU, RAM, disk utilisation, optional GPU and running processes while GUI is closed or no session exists |
 | FR04 | Software inventory | MSI/uninstall entries, MSIX and configured portable detection with provenance; unknown is not compliant |
@@ -47,3 +47,6 @@ Users may hold several roles. Role and asset scope are checked by the server. Su
 ## Explicit non-goals for first release
 
 Remote shell, forced logoff, forced reboot, unattended deployment of unvalidated vendor releases, arbitrary command execution, remote evidence access, screen surveillance and public internet ingress. Tailscale is a deferred P8 deployment option, not embedded bespoke VPN code. Cross-suite notification federation is a later expansion.
+
+## Proposed expansion
+FR15–FR26 are specified in [Laboratory expansion](LABORATORY_EXPANSION.md). Existing requirements and P7 acceptance remain unchanged; expansion capabilities are independently gated and LAN-first.

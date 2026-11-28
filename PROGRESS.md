@@ -2,11 +2,15 @@
 
 **Baseline Documentation:** `docs/` (v0.2, 27 November 2026 — updated for standalone Linux Docker Stack + `LocalJwt` auth + DFU Break-Glass Escrow P6)  
 **Start Here:** [docs/README_START_HERE.md](docs/README_START_HERE.md)  
-**Last Updated:** 2026-11-27  
+**Last Updated:** 2026-11-28 (documentation-only expansion proposal; historical test results unchanged)  
 **Current Active Phase:** **P7 — Hardening (P1–P7 LAN Scope Code & CI Complete — 582/582 tests passing)** → Ready for Live Lab Operational Acceptance & Gated **P8 — Deferred Remote Connectivity**  
 **Deployment Scope:** **LAN-only (P1–P7)**. Server runs on a **standalone Linux server via Docker Stack** (`deploy/docker/`) against the existing LAN PostgreSQL database using **self-contained Local Hive Accounts (`LocalJwt`)** (zero Active Directory domain join, SPN, or keytab required); endpoints and UI remain native Windows. Tailscale/hybrid remote connectivity is **strictly deferred to P8** after P7 LAN operational acceptance.
 
 ---
+
+## Proposed v0.3 expansion backlog (not started)
+
+See [FR15–FR26](docs/01_Product/LABORATORY_EXPANSION.md) and [E1–E10](docs/03_Implementation/ROADMAP.md). P7 live acceptance remains outstanding; P8 remains separately gated. No implementation, migration, local CI rerun or production test is claimed by this documentation change. The 582 tests below are the previously reported result for the existing code.
 
 ## 1. Purpose of This Document
 

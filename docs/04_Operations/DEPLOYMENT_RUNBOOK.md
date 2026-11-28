@@ -34,3 +34,6 @@ If suspected compromise or unsafe install: disable new deployment leases, revoke
 ## Endpoint removal
 
 Revoke device certificate/tailnet access, cancel pending jobs, record decommission and retain approved audit. Uninstall service/broker and GUI through approved maintenance; remove startup registration and protected caches according to retention policy. Do not touch evidence or unrelated installed software. Reassigned asset gets new assignment record; reimaged device re-enrolls with identity history retained.
+
+## Expansion rollout
+After P7 acceptance, enable each expansion capability on non-evidential pilot workstations only after its V25–V37 gates and approval. Configure site-specific permissions, retention, allowed collectors/relays, package trust and feature flags; all new features disabled by default. Back up DB/artifacts before migrations, verify restore and mixed client compatibility. Disable feature on errors, revoke pending leases/requests, preserve audit and local protection, never force reboot or terminate forensic work. P8 remains independently gated.
