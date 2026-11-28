@@ -5,7 +5,7 @@ PostgreSQL is authoritative; SQLite is local cache/queue only. Use UUIDs, UTC ti
 | Entity | Key fields and invariants |
 |---|---|
 | devices | device_id PK, asset_number unique where assigned, hostname, site_id, cert_binding, enrollment_state, last_seen_utc, policy_revision |
-| device_assignments | device_id, AD user SID, assigned_by, valid_from/to; at most one active primary assignment |
+| device_assignments | device_id, immutable Hive user subject, assigned_by, valid_from/to; at most one active primary assignment |
 | device_sessions | device_id, boot_id, session_id, user_sid, session_state, observed_at; session ID alone not durable |
 | device_interfaces | device_id, type, hostname/IP, observed_at; reachability hints only |
 | device_metrics | device_id, boot_id, sample_sequence, sampled_at, received_at, cpu/memory/gpu; unique sample key; time partition if justified |
@@ -42,3 +42,9 @@ Raw telemetry 7 days, 1-minute aggregates 30 days, hourly aggregates 180 days; p
 ## Migration and recovery
 
 Test forward migration and restoration on representative data. Back up before incompatible migrations. Keep application backward compatible during staged rollout; DB changes expand/contract. Restore DB and corresponding immutable package manifests/artifacts consistently; revoke stale leases after restoration. Audit exports exclude secrets and sensitive content by default.
+
+## Expansion
+See [Expansion contracts](EXPANSION_CONTRACTS.md) for proposed additive entities and data boundaries. Preserve current migrations and retention gates; distinguish LocalJwt user subject from local Windows session SID.
+
+## Offline and scale refinement
+See [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md) for data ownership, event dedupe/acknowledgement, queue quotas, reconnect order and user conflict rules. Keep PostgreSQL authoritative, SQLite local only. No peer DB replication. Measure WAL, indexes, batches and reconnect bursts before partitioning or adding infrastructure; optional standby is server-side physical replication, not a second writer.

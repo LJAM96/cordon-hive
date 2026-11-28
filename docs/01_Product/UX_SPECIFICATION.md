@@ -11,7 +11,7 @@ Native C# WinUI 3 on .NET 10 LTS with Windows App SDK version pinned following c
 | Overview | Fleet totals, online/stale/offline, protected work, compliance, storage warnings, notifications requiring action; filter by site or group |
 | Workstations | Search asset/hostname/assigned user, sort by last seen and load; select detail; allocate asset, initiate RDP if authorised |
 | Workstation detail | Current session(s), assigned user, network path, CPU/RAM/GPU charts, per-volume capacity, processes, software, deployments, notification history, protection reasons |
-| Users | AD-backed identity and asset assignment, current login association, scoped notification targets |
+| Users | Local Hive identity (optional AD) and asset assignment, current login association, scoped notification targets |
 | Software | Discovered vs managed; product rules, approved versions, validation evidence and exemptions |
 | Deployments | Draft, approved, staged, deferred, installing, verified, failed, unknown; target preview and cancellation before start |
 | Notifications | Compose with priority, audience, completion type, due date; delivery/read/acknowledged/completed counts |
@@ -35,3 +35,6 @@ Loading with skeleton, empty, filtered, partial, stale, offline, error and permi
 ## Acceptance
 
 Test dark/light/high contrast, 100–200% DPI and mixed monitors, 1366×768 and larger, keyboard only, Narrator, touch where relevant, taskbar auto-hide, fullscreen, multiple sessions and Explorer restart. Verify that regular users cannot navigate to or invoke supervisor features by modifying UI routes.
+
+## Expansion navigation
+See [Laboratory expansion](LABORATORY_EXPANSION.md) for proposed capability-based pages: Hardware, Laboratory, Support, Software Centre, Quality Assurance and Operations. Preserve existing user/supervisor navigation, offline/stale states and server permission checks.

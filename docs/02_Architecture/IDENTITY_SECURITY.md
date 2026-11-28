@@ -8,7 +8,7 @@ Enroll each agent through administrator-authorised one-time enrollment, unique d
 
 ## Permissions
 
-| AD group (example) | Permission |
+| Capability / optional AD group mapping (example) | Permission |
 |---|---|
 | CordonHiveUsers | Own/authorised session and device information; own acknowledgements |
 | CordonHiveSupervisors | Scoped inventory, assignments, communications |
@@ -19,7 +19,7 @@ Enroll each agent through administrator-authorised one-time enrollment, unique d
 | CordonHiveAdministrators | Enrollment and platform policy; no implicit credential access |
 | CordonHiveAuditors | Scoped read-only audit |
 
-Group mapping and scope configurable. Server resolves actor and resource scope per operation; client visibility is not security. Re-evaluate permissions on sensitive commands and reconnect. No client-side role claims trusted. Separate publishing and signing keys; privileged actions attributable to individual accounts, not shared logins.
+LocalJwt roles and scope are authoritative by default; optional AD group mapping is configurable. Server resolves actor and resource scope per operation; client visibility is not security. Re-evaluate permissions on sensitive commands and reconnect. No client-side role claims trusted. Separate publishing and signing keys; privileged actions attributable to individual accounts, not shared logins.
 
 ## Threat model
 
@@ -42,3 +42,6 @@ TLS on LAN and tailnet; verify trust and hostname, no certificate bypass. Use in
 ## Governance
 
 Operational metadata can identify staff and reveal workload patterns. Complete security/IT approval, applicable data protection assessment, access/retention policy, quality impact assessment, incident response and forensic validation before live use. No claims of accreditation. Tailscale on personal accounts or isolated evidence networks is prohibited by design until formal approval.
+
+## Offline and peer threat boundaries
+No cached user or device identity grants new central privilege during outage. No peer access to database, secrets, SQLite or evidence. Future peer package transport requires source/receiver-bound short-lived grants, mTLS, current entitlement and revocation checks, independently verified signed manifests, network isolation, throttling and emergency disable. HA requires fenced single writer and protected key recovery; see [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md).

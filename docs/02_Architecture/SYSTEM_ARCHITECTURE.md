@@ -4,11 +4,11 @@
 
 ```mermaid
 flowchart TD
-    AD[Active Directory] --> API[ASP.NET Core API / SignalR]
+    Auth[LocalJwt / optional AD] --> API[ASP.NET Core API / SignalR]
     API --> DB[(PostgreSQL)]
     API --> Repo[Internal HTTPS package repository]
     Agent[Windows monitoring service] <-->|TLS + device identity| API
-    User[WinUI 3 session app + widget] <-->|TLS + AD identity| API
+    User[WinUI 3 session app + widget] <-->|TLS + user identity| API
     User <-->|Authenticated named pipe| Agent
     Agent --> Broker[Restricted installer broker]
     Broker --> Stage[Protected local package cache]
@@ -24,7 +24,7 @@ All arrows are logical communication, not firewall rules. LAN provides transport
 
 | Component | Runtime and responsibility |
 |---|---|
-| Hive.App | Unelevated per interactive session; native UI, toast activation, widget, AD-authenticated actions |
+| Hive.App | Unelevated per interactive session; native UI, toast activation, widget, LocalJwt-authenticated actions |
 | Hive.Agent | Windows Service, least privilege, machine telemetry, inventory, durable sync, local protection state |
 | Hive.Installer | Narrow privileged broker; verifies signed manifest and local safety permit, executes predefined install profiles |
 | Hive.Server | ASP.NET Core HTTP API and SignalR; auth, policies, event dispatch and package streaming |
@@ -67,3 +67,9 @@ src/Hive.Notifications/    # durable state and routing
 ```
 
 Keep platform-independent domain tests separate from Windows-specific integration tests. Local CI initially; no assumption that hosted runners can access forensic infrastructure.
+
+## Expansion boundaries
+Extend existing domain/contracts/repositories and Windows collectors, not separate microservices by default. See [Expansion contracts](EXPANSION_CONTRACTS.md). Wake relay is an explicitly authorised outbound-sync agent capability, not an inbound listener. Signed component updater is a narrowly scoped separate lifecycle process; no general execution channel.
+
+## Authority and resilience decision
+Single logical PostgreSQL authority, endpoint SQLite queues and per-user protected caches; no peer database synchronisation. See [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md). The LAN baseline remains one primary/API; optional site cache/peer package transport and infrastructure HA require distinct gates. Any future cache listener is a restricted data-only process, never an inbound agent management channel.

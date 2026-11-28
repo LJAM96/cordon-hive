@@ -16,8 +16,8 @@ Status: proposed tests, no execution results. Use non-evidential test workloads,
 | V10 | FR07 | Notification delivered, native toast suppressed, collapsed widget still pending; acknowledgement not update completion |
 | V11 | FR07/10 | Server outage, offline acknowledgement, duplicate SignalR hints, expired cursor, restart; correct reconciliation |
 | V12 | FR07/13 | User switch, RDP multiple sessions, no login, source spoof; no cross-user or cross-publisher data leak |
-| V13 | FR08/09 | RDP active/protected/stale device, denied AD group, NLA/certificate failure, saved credentials disallowed; no bypass |
-| V14 | FR12 (P8 only) | LAN to remote tailnet, DERP/metered path, DNS failure, domain controller unavailable; device sync continues, user auth fails closed |
+| V13 | FR08/09 | RDP active/protected/stale device, denied role/scope, NLA/certificate failure, saved credentials disallowed; no bypass |
+| V14 | FR12 (P8 only) | LAN to remote tailnet, DERP/metered path, DNS failure, optional domain controller unavailable; LocalJwt remains independent, configured auth fails closed |
 | V15 | FR12 (P8 only) | Tailnet grants and LAN firewall negative tests, public scan, DB unreachable, revoked node/agent; deny |
 | V16 | FR10 | Interrupted installer download, wrong ETag, corrupted bytes, exhausted space; resume only valid or restart, no execution |
 | V17 | FR11 | Audit actor, target, timestamp, scope and correlation; no secrets; unauthorised deletion denied |
@@ -35,4 +35,34 @@ Measure CPU/RAM, throughput delta, network volume, API latency, event delivery/r
 
 ## Release gates
 
-P1 identity and enrollment; P2 performance/privacy; P3 inventory integrity; P4 notification durability and UI accessibility; P5 privileged security and safe install; P6 LAN RDP and session controls; P7 LAN recovery and operational sign-off; P8 optional remote connectivity. V14/V15 do not block LAN release. Verify equivalent LAN firewall, API/database isolation and device revocation during P1/P6/P7 as applicable. P8 adds end-to-end API-to-database reachability without direct tailnet database exposure, off-site DNS/Kerberos and reconnect tests. Retain risk exceptions explicitly, with owners and expiry; no waiver of protected-workload invariant by ordinary supervisor. Any unverified third-party installer remains manual/notify only.
+P1 identity and enrollment; P2 performance/privacy; P3 inventory integrity; P4 notification durability and UI accessibility; P5 privileged security and safe install; P6 LAN RDP and session controls; P7 LAN recovery and operational sign-off; P8 optional remote connectivity. V14/V15 do not block LAN release. Verify equivalent LAN firewall, API/database isolation and device revocation during P1/P6/P7 as applicable. P8 adds end-to-end API-to-database reachability without direct tailnet database exposure, off-site DNS/LocalJwt and reconnect tests (Kerberos only if configured). Retain risk exceptions explicitly, with owners and expiry; no waiver of protected-workload invariant by ordinary supervisor. Any unverified third-party installer remains manual/notify only.
+
+## Expansion verification (all proposed / not run)
+
+| ID | Requirement | Required tests |
+|---|---|---|
+| V25 | FR15 | Supported and denied sensors, missing GPU/SMART, hardware replace, evidence device excluded, no kernel dependency without approval, bounded performance |
+| V26 | FR16 | Feature/build/UBR numeric comparison, ahead/unknown/exception, conflicting scopes, update policy read only, history |
+| V27 | FR17 | Provider/ID fixture, log rotation/clear, bookmark restart, duplicate/offline replay, structured redaction, repeated alerts and recovery |
+| V28 | FR19 | Tampered/wrong signer/hash/expired/replayed package, revoked key/offline trust, dual approval, power loss, mixed versions, protected state, signed recovery, emergency stop |
+| V29 | FR18 | Wired S-state compatibility, wrong VLAN/relay/target, arbitrary destination denied, expiry/rate limit, sent vs heartbeat, wake-and-RDP separate permission |
+| V30 | FR21 | Duplicate serial, replacement, manual write blocker, transfer collision, missing/damaged/retire, QR scope, no exhibit import |
+| V31 | FR23 | Own vs other tickets, diagnostic preview/redaction, attachment quarantine, offline duplicate, approved/rejected/partial requests, concurrent asset allocation |
+| V32 | FR22 | Floor plan upload malformed/oversized, scope bypass, revision conflict, drag/keyboard/zoom/DPI, stale overlays and no implied location |
+| V33 | FR24 | Ineligible release, self service role, window expiry, dependency cycle, cache integrity/space, staged rings, rollback and no forced reboot |
+| V34 | FR25 | Independent approval, module/config/hash mismatch, review expiry, withdrawn release, effective dates, observation gaps, export injection/scopes |
+| V35 | FR26 | Process vs confirmed job, progress absent, stale/paused/stall, duplicate completion, adapter crash, no raw case fields, lock persists offline/restart |
+| V36 | FR20 | Synthetic profile repeatability, wrong profile/signature, scratch/evidence path rejection, cancel on protection, thermal/space limits, interrupted cleanup |
+| V37 | All | Real PostgreSQL expand/contract and restore, mixed clients, offline queues, API/IPC scope, notification source isolation, lab load and security/quality sign-off |
+
+Use non-evidential equipment and synthetic fixtures. Record actual results separately in PROGRESS.md only after execution; no expansion gate is passed.
+
+## Resilience verification (proposed / not run)
+| ID | Gate | Required tests |
+|---|---|---|
+| V38 | E11 | API/DB outage and service restart, cached stale UI, revoked identity, user conflict, dedupe after lost ack, queue pressure/gap counters, protection persists, no new privileged operations, reconnect storm/backoff |
+| V39 | E11 | Real PostgreSQL representative fleet rates and peak reconnect bursts, query latency, connection limits, WAL/index/disk growth, aggregation/retention, workload overhead, restore and measured capacity |
+| V40 | E12 optional | Wrong source/receiver/digest/zone, expired/replayed/revoked grant, corrupt bytes, arbitrary path rejection, cache quota, interrupted download, central fallback, workload throttling, withdrawal, no peer install authority; measure egress/LAN/throughput |
+| V41 | E13 optional | Primary/API failure, partition and fencing, lag, failback/rejoin, PITR independent of replica, artifact/key consistency, worker duplication, SignalR resync, revoked lease and emergency stop, measure RPO/RTO |
+
+All gates require non-evidential fixtures and explicit security/quality approval. Existing P7/P8 gates unchanged; V40/V41 do not block LAN release.

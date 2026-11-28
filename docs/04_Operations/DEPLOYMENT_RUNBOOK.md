@@ -34,3 +34,9 @@ If suspected compromise or unsafe install: disable new deployment leases, revoke
 ## Endpoint removal
 
 Revoke device certificate/tailnet access, cancel pending jobs, record decommission and retain approved audit. Uninstall service/broker and GUI through approved maintenance; remove startup registration and protected caches according to retention policy. Do not touch evidence or unrelated installed software. Reassigned asset gets new assignment record; reimaged device re-enrolls with identity history retained.
+
+## Expansion rollout
+After P7 acceptance, enable each expansion capability on non-evidential pilot workstations only after its V25–V37 gates and approval. Configure site-specific permissions, retention, allowed collectors/relays, package trust and feature flags; all new features disabled by default. Back up DB/artifacts before migrations, verify restore and mixed client compatibility. Disable feature on errors, revoke pending leases/requests, preserve audit and local protection, never force reboot or terminate forensic work. P8 remains independently gated.
+
+## Resilience operations
+Monitor API readiness, DB connection/transaction errors, disk/WAL growth, backup freshness, local queue age and drops, last successful heartbeat. On outage, freeze new central privileged work, retain local protection and journal, do not force reboot. Recover API/DB/keys/artifacts from consistent approved backup, invalidate uncertain leases and reconcile with throttled reconnect. Optional E12 peer cache and E13 HA remain disabled until respective gates. For HA require documented fenced promotion/failback and independent restore test; do not promote simply on failed heartbeat. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).

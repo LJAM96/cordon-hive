@@ -24,8 +24,8 @@ All ADRs below are proposed; confirm with maintainer and organisational owners b
 | Privileged deployment supply chain compromise | Critical | Security/software lead | Independent signing, broker allowlist, approval, pilot, revocation; P5 |
 | Disrupted acquisition/processing | Critical | Quality/operations | Guard, protected locks, installer validation, manual fallback; P5 |
 | External access to isolated forensic environment | Critical | Network/security | Separate deployments, restrictive grants and firewall, approval; LAN isolation P0–P7, hybrid P8 |
-| Saved credentials exposed or misused | High | Identity/security | Individual AD, native vault/LAPS, no central secrets; P6 |
-| Remote AD unavailable | High | IT | Canonical hostname/SPN, DNS/routes, fail closed, device cert; P8 |
+| Saved credentials exposed or misused | High | Identity/security | Individual credentials or explicit P6 AES-GCM escrow, separate key, reason-audited custodian access |
+| Optional remote AD unavailable | High | IT | Canonical hostname/SPN, DNS/routes, fail closed, device cert; P8 |
 | Explorer docking incompatibility | Medium | Desktop engineering | Default overlay/tray, isolated experimental mode; P0/P4 |
 | Staff privacy and case metadata leakage | High | Data protection/quality | Minimise collection, scopes, retention, safe toast; P2/P4 |
 | Inventory false compliance | High | Software lead | Detection provenance, version semantics, unknown state; P3 |
@@ -47,4 +47,34 @@ All ADRs below are proposed; confirm with maintainer and organisational owners b
 
 ## Explicit limitations
 
-No code, deployment, compile, GUI prototype, DB migration or Windows tests have been performed by this documentation exercise. Source review was limited to relevant Cordon Alert files. Technical references support design decisions, not compatibility guarantees. Sample policies, schemas, names, metrics and frequencies require validation. No accreditation, information security or organisational approval is implied.
+This documentation update performs no code, deployment, compile, DB migration or Windows tests. Existing implementation evidence is reported in PROGRESS.md; expansion remains proposed. Technical references support design decisions, not compatibility guarantees. Sample policies, schemas, names, metrics and frequencies require validation. No accreditation, information security or organisational approval is implied.
+
+## Proposed expansion decisions and risks
+| ADR | Decision | Rationale |
+|---|---|---|
+| ADR13 | Modular LAN-first expansion | Reuse existing application/service/API, preserve P7/P8 gates |
+| ADR14 | Typed local wake relay | No public broadcast, arbitrary packets or inbound agent management |
+| ADR15 | Dedicated signed component lifecycle | Independent signer, anti-replay, recovery, preserve protection |
+| ADR16 | Observations separated from approved state | Unknown never compliant; historical observations not continuous proof |
+| ADR17 | Sanitised diagnostic and adapter signals only | No raw event/case data or surveillance |
+| ADR18 | Registered assets separate from observed hardware | Reconciliation and audit; exclude exhibits |
+
+| Risk | Mitigation / gate |
+|---|---|
+| Sensor access/driver supply chain and telemetry load | Native first, licence and driver approval, V25/V37 |
+| Wake crosses network boundary | Approved relay/interface/target, no bridge, V29 |
+| Updater bricks agent or loses protection | Independent recovery and compatibility, V28 |
+| Diagnostics/floorplans expose sensitive information | Preview, allowlist, scope, retention, V31/V32 |
+| Wrong quality status or false forensic progress | Provenance, effective times, unknown state, adapter verification, V34/V35 |
+| Benchmark disrupts acquisition | Synthetic scratch, explicit consent, shared guard, V36 |
+
+Open decisions: approved sensor libraries/vendors, lab VLAN and power states, update key custody and offline revocation policy, OS baseline owners, asset verification/retention policy, permitted floor plans, support attachment scanning, vendor adapter availability/licences, benchmark profiles and performance budgets. No new production approvals implied.
+
+## Resilience decisions (proposed)
+| ADR | Decision | Rationale |
+|---|---|---|
+| ADR19 | Single logical PostgreSQL authority and endpoint-local SQLite | Avoid peer conflict resolution and distributing secrets; local work remains resilient |
+| ADR20 | Selective centrally authorised peer transport | E3 wake relay; E12 optional package caching only after measured need; no P2P authority |
+| ADR21 | Optional server-side HA | Independent backups first; fenced primary/standby and end-to-end recovery only when justified |
+
+Risks: queue exhaustion/duplicate effects (V38), database overload (V39), cache supply chain or lateral network exposure (V40), split-brain/replication lag/key loss (V41). Agree fleet size, retention, network budgets, RPO/RTO, failover ownership and redistribution terms before deployment. Distributed forensic compute remains separately governed future feasibility. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).

@@ -64,3 +64,9 @@ A failure may occur during any stage; keep explicit failed/unknown reason and au
 ## Audit evidence
 
 Record release digest, signer, package hash, validation reference, approvers, target, requested policy, safety decision/reason codes, times, attempt and detection result. Retain deployment evidence under lab policy. No passwords, case paths or confidential installer output in logs. A release may be withdrawn; revoke new leases immediately, cancel pending jobs, investigate any in-progress attempts rather than forcibly stop.
+
+## Expansion
+See [Lifecycle, Software Centre and Quality](LIFECYCLE_SOFTWARE_CENTRE_QUALITY.md) for signed component updates, self service, validation and historical reporting. Reuse existing release approval and safe deployment rules; do not create an alternate privileged execution path.
+
+## Future distribution optimisation
+Central HTTPS remains mandatory fallback. Optional E12 site/peer cache may deliver verified bytes only under separate server-issued transfer grants; it cannot approve or install software. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).

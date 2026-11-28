@@ -47,3 +47,9 @@ Example envelope:
 ## Local IPC
 
 Named pipe with restrictive DACL, local-only access, authenticated caller SID/session, version handshake, bounded framing, message size and timeouts. Separate user-facing and broker pipes. User messages: local resources, local applicable update status, set/release own protection lock, request eligible update, widget health. Never accept a user-supplied SID as authority. Broker messages: approved target ID, verified manifest reference and fresh permit; broker rechecks signature, staging ACL, policy, workload and path. No arbitrary executable path, shell string or credential transfer. Rate limit and audit rejected requests. Future suite publisher API is separate, with publisher registration and limited authority; source cannot complete another source's action.
+
+## Expansion
+See [Expansion contracts](EXPANSION_CONTRACTS.md) for proposed typed endpoint families, IPC and SignalR hints. No route is implemented by this documentation update.
+
+## Resilience refinement
+See [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md). Acknowledge observations only after durable transaction; idempotency binds actor/device and event/resource revision. Offline user intents require fresh authorisation; conflicts return 409, not silent overwrite. SignalR is a hint, durable sync is authoritative. Peer cache grants are a future typed transfer-only contract, never an install lease or general agent listener.
