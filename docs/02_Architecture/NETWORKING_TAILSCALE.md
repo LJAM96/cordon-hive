@@ -40,3 +40,6 @@ In P8, a remote device may be behind NAT, on metered links or via DERP. Support 
 ## Approval gate
 
 P8 requires P7 LAN acceptance and separate infrastructure/security approval. Standard Tailscale depends on an external coordination service, and relay use is possible despite encrypted device traffic. It is not a fully offline transport. An isolated instance remains separate. Determine approved tailnet tenant, licensing, control-plane data handling, topology, firewall ownership and domain connectivity with IT. Self-hosted alternatives are not assumed equivalent or approved; evaluate separately if required.
+
+## Selective LAN peer traffic
+E3 Wake on LAN is outbound-sync relay only, scoped to approved local broadcast domain. Optional E12 cache transport is a separately approved data-only listener on nominated LAN hosts, deny by default, no general agent inbound port, no isolated-network bridge or tailnet peer distribution in this scope. PostgreSQL remains private, including optional replication links restricted to approved server hosts. P8 still optional and separately gated. See [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md).

@@ -10,7 +10,7 @@
 
 ## Proposed v0.3 expansion backlog (not started)
 
-See [FR15–FR26](docs/01_Product/LABORATORY_EXPANSION.md) and [E1–E10](docs/03_Implementation/ROADMAP.md). P7 live acceptance remains outstanding; P8 remains separately gated. No implementation, migration, local CI rerun or production test is claimed by this documentation change. The 582 tests below are the previously reported result for the existing code.
+See [FR15–FR29](docs/01_Product/LABORATORY_EXPANSION.md) and [E1–E13](docs/03_Implementation/ROADMAP.md). P7 live acceptance remains outstanding; P8 remains separately gated. [Resilience architecture](docs/02_Architecture/RESILIENCE_AND_PEER_ASSIST.md) retains central PostgreSQL, endpoint-local SQLite and fail-closed offline operation; E11 resilience/capacity, E12 optional peer package transport and E13 optional HA are proposed only. No P2P database or distributed compute implementation is authorised. No implementation, migration, local CI rerun or production test is claimed by this documentation change. The 582 tests below are the previously reported result for the existing code.
 
 ## 1. Purpose of This Document
 

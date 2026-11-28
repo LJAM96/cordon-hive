@@ -42,3 +42,6 @@ MUST denotes a required design invariant; SHOULD denotes a preferred implementat
 | [Expansion contracts](02_Architecture/EXPANSION_CONTRACTS.md) | Proposed persistence, REST, IPC and events |
 
 Read the expansion requirements and specifications with the existing architecture and roadmap. These are unimplemented proposals; do not treat the existing P7 gate as satisfied or introduce Tailscale before P8.
+
+## Resilience architecture refinement
+[Central authority, offline resilience and selective peer assistance](02_Architecture/RESILIENCE_AND_PEER_ASSIST.md) defines PostgreSQL/SQLite boundaries, outage/reconciliation behaviour, capacity, optional package caching and optional HA. FR27–FR29 and E11–E13 extend the proposed backlog; no P2P database or new infrastructure required for LAN acceptance.

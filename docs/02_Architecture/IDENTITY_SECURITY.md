@@ -42,3 +42,6 @@ TLS on LAN and tailnet; verify trust and hostname, no certificate bypass. Use in
 ## Governance
 
 Operational metadata can identify staff and reveal workload patterns. Complete security/IT approval, applicable data protection assessment, access/retention policy, quality impact assessment, incident response and forensic validation before live use. No claims of accreditation. Tailscale on personal accounts or isolated evidence networks is prohibited by design until formal approval.
+
+## Offline and peer threat boundaries
+No cached user or device identity grants new central privilege during outage. No peer access to database, secrets, SQLite or evidence. Future peer package transport requires source/receiver-bound short-lived grants, mTLS, current entitlement and revocation checks, independently verified signed manifests, network isolation, throttling and emergency disable. HA requires fenced single writer and protected key recovery; see [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md).

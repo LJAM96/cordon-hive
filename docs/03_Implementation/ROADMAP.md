@@ -45,3 +45,12 @@ P7 live acceptance remains the immediate gate. P8 remains separately approved an
 | E10 Benchmarks | FR20; E1 inventory, E2 signed profiles, E9 protection integration | V36, repeatability, no evidence writes/interruptions |
 
 E1/E2 may proceed in parallel; E3 and E4 after E1; E5/E6 after E4; E7 and E8 coordinate policy contracts; E9 can begin with manual and first-party adapter spikes independently; E10 requires safety integration. Each vertical slice includes domain tests, real PostgreSQL integration, Windows tests, UI acceptance, migration/restore, dependency review and local CI; feature flags off until approval. Shared verification V37 covers integration and operational load. No feature deemed implemented by documentation.
+
+## Resilience and optional infrastructure work packages (proposed)
+| Package | Dependencies / scope | Gate |
+|---|---|---|
+| E11 Offline resilience and capacity | Strengthen existing P7 queue/restore baseline; design with E1, integrate across E2–E10 | V38/V39; offline/reconnect, real PostgreSQL capacity and workload safety |
+| E12 Peer-assisted packages | Optional after E2/E7/E11; measured central bottleneck, approved licences/network; dedicated site cache first if preferable | V40; no new authority, signed bytes, fallback and no forensic impact |
+| E13 Server HA | Optional after P7/E11 and agreed business RPO/RTO; primary/standby plus end-to-end dependencies | V41; fencing, failover, backup restore, no duplicate privileged effects |
+
+E11 extends existing resilience without redefining completed historical P7 code or delaying its live acceptance for optional features. E12/E13 are independent optional investments, not mandatory expansion or P8 prerequisites. E3 wake relay remains centrally authorised. Distributed forensic compute is future feasibility only; no implementation package or evidence transfer authorised. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).

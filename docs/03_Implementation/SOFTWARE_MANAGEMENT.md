@@ -67,3 +67,6 @@ Record release digest, signer, package hash, validation reference, approvers, ta
 
 ## Expansion
 See [Lifecycle, Software Centre and Quality](LIFECYCLE_SOFTWARE_CENTRE_QUALITY.md) for signed component updates, self service, validation and historical reporting. Reuse existing release approval and safe deployment rules; do not create an alternate privileged execution path.
+
+## Future distribution optimisation
+Central HTTPS remains mandatory fallback. Optional E12 site/peer cache may deliver verified bytes only under separate server-issued transfer grants; it cannot approve or install software. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).

@@ -7,3 +7,5 @@ Cordon Hive is a Windows workstation management platform for forensic laboratory
 Initial deployment is LAN-only: the server-side platform (`Hive.Server` / `Hive.Worker`) runs on a **Linux server via a Docker Stack** (`deploy/docker/`) against the existing LAN PostgreSQL server (not currently on Tailscale), while managed endpoints and the user/supervisor UI remain native Windows applications. LAN RDP remains in scope; off-site Tailscale connectivity is deferred until P8, after LAN operational acceptance. PostgreSQL remains private to the API in every deployment.
 
 Start with [the documentation index](docs/README_START_HERE.md). All decisions are proposed unless marked as a requirement. This documentation update does not change production infrastructure or application code.
+
+Architecture refinement: central PostgreSQL authority with endpoint-local SQLite and protected offline cache. Optional peer-assisted package transport and server-side HA are future gated capabilities, not baseline requirements. See [resilience design](docs/02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).

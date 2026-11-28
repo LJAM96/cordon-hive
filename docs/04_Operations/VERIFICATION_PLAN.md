@@ -56,3 +56,13 @@ P1 identity and enrollment; P2 performance/privacy; P3 inventory integrity; P4 n
 | V37 | All | Real PostgreSQL expand/contract and restore, mixed clients, offline queues, API/IPC scope, notification source isolation, lab load and security/quality sign-off |
 
 Use non-evidential equipment and synthetic fixtures. Record actual results separately in PROGRESS.md only after execution; no expansion gate is passed.
+
+## Resilience verification (proposed / not run)
+| ID | Gate | Required tests |
+|---|---|---|
+| V38 | E11 | API/DB outage and service restart, cached stale UI, revoked identity, user conflict, dedupe after lost ack, queue pressure/gap counters, protection persists, no new privileged operations, reconnect storm/backoff |
+| V39 | E11 | Real PostgreSQL representative fleet rates and peak reconnect bursts, query latency, connection limits, WAL/index/disk growth, aggregation/retention, workload overhead, restore and measured capacity |
+| V40 | E12 optional | Wrong source/receiver/digest/zone, expired/replayed/revoked grant, corrupt bytes, arbitrary path rejection, cache quota, interrupted download, central fallback, workload throttling, withdrawal, no peer install authority; measure egress/LAN/throughput |
+| V41 | E13 optional | Primary/API failure, partition and fencing, lag, failback/rejoin, PITR independent of replica, artifact/key consistency, worker duplication, SignalR resync, revoked lease and emergency stop, measure RPO/RTO |
+
+All gates require non-evidential fixtures and explicit security/quality approval. Existing P7/P8 gates unchanged; V40/V41 do not block LAN release.

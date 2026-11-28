@@ -28,3 +28,6 @@ Overview highlights fleet freshness, health, Windows and software compliance, ac
 ## Explicit non-goals
 
 No automatic Windows patch installation, forced reboot/shutdown, unattended benchmark under forensic load, general log collection, arbitrary scripting, evidence file access, automatic vendor licence bypass, or claim of accreditation. Floor plans and operational data are sensitive. Do not make expansion a prerequisite for existing P7 acceptance; individual feature flags default off until their own approval.
+
+## Resilience requirements (proposed)
+FR27: preserve local monitoring, protected workload enforcement and bounded offline queues during API/database outage; central mutations and new privileged work fail closed; show stale/pending state. FR28 (optional): centrally authorised peer/site package cache with independently verified bytes and central fallback; no peer authority. FR29 (optional): server-side availability and tested recovery against agreed RPO/RTO; no multi-master. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md). V38–V41 verify these requirements. P7/P8 gates remain unchanged.

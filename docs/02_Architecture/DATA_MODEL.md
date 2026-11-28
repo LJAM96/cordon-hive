@@ -45,3 +45,6 @@ Test forward migration and restoration on representative data. Back up before in
 
 ## Expansion
 See [Expansion contracts](EXPANSION_CONTRACTS.md) for proposed additive entities and data boundaries. Preserve current migrations and retention gates; distinguish LocalJwt user subject from local Windows session SID.
+
+## Offline and scale refinement
+See [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md) for data ownership, event dedupe/acknowledgement, queue quotas, reconnect order and user conflict rules. Keep PostgreSQL authoritative, SQLite local only. No peer DB replication. Measure WAL, indexes, batches and reconnect bursts before partitioning or adding infrastructure; optional standby is server-side physical replication, not a second writer.

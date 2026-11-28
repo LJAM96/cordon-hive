@@ -69,3 +69,12 @@ This documentation update performs no code, deployment, compile, DB migration or
 | Benchmark disrupts acquisition | Synthetic scratch, explicit consent, shared guard, V36 |
 
 Open decisions: approved sensor libraries/vendors, lab VLAN and power states, update key custody and offline revocation policy, OS baseline owners, asset verification/retention policy, permitted floor plans, support attachment scanning, vendor adapter availability/licences, benchmark profiles and performance budgets. No new production approvals implied.
+
+## Resilience decisions (proposed)
+| ADR | Decision | Rationale |
+|---|---|---|
+| ADR19 | Single logical PostgreSQL authority and endpoint-local SQLite | Avoid peer conflict resolution and distributing secrets; local work remains resilient |
+| ADR20 | Selective centrally authorised peer transport | E3 wake relay; E12 optional package caching only after measured need; no P2P authority |
+| ADR21 | Optional server-side HA | Independent backups first; fenced primary/standby and end-to-end recovery only when justified |
+
+Risks: queue exhaustion/duplicate effects (V38), database overload (V39), cache supply chain or lateral network exposure (V40), split-brain/replication lag/key loss (V41). Agree fleet size, retention, network budgets, RPO/RTO, failover ownership and redistribution terms before deployment. Distributed forensic compute remains separately governed future feasibility. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).

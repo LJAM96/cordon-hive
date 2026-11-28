@@ -70,3 +70,6 @@ Keep platform-independent domain tests separate from Windows-specific integratio
 
 ## Expansion boundaries
 Extend existing domain/contracts/repositories and Windows collectors, not separate microservices by default. See [Expansion contracts](EXPANSION_CONTRACTS.md). Wake relay is an explicitly authorised outbound-sync agent capability, not an inbound listener. Signed component updater is a narrowly scoped separate lifecycle process; no general execution channel.
+
+## Authority and resilience decision
+Single logical PostgreSQL authority, endpoint SQLite queues and per-user protected caches; no peer database synchronisation. See [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md). The LAN baseline remains one primary/API; optional site cache/peer package transport and infrastructure HA require distinct gates. Any future cache listener is a restricted data-only process, never an inbound agent management channel.

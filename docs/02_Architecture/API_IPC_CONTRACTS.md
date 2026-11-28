@@ -50,3 +50,6 @@ Named pipe with restrictive DACL, local-only access, authenticated caller SID/se
 
 ## Expansion
 See [Expansion contracts](EXPANSION_CONTRACTS.md) for proposed typed endpoint families, IPC and SignalR hints. No route is implemented by this documentation update.
+
+## Resilience refinement
+See [Resilience and peer assistance](RESILIENCE_AND_PEER_ASSIST.md). Acknowledge observations only after durable transaction; idempotency binds actor/device and event/resource revision. Offline user intents require fresh authorisation; conflicts return 409, not silent overwrite. SignalR is a hint, durable sync is authoritative. Peer cache grants are a future typed transfer-only contract, never an install lease or general agent listener.

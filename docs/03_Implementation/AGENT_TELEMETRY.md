@@ -35,3 +35,6 @@ Benchmark with agent disabled/enabled across idle, hashing, imaging, video proce
 
 ## Expansion
 See [Fleet intelligence](FLEET_INTELLIGENCE.md) and [Forensic operations](FORENSIC_OPERATIONS.md). Existing collector budgets, local protection, unknown/stale semantics and evidence minimisation remain mandatory.
+
+## Outage behaviour
+Local collectors, protection and bounded diagnostics continue independently of the API. Preserve critical journal transitions, coalesce routine metrics with gap counters, backoff and reconcile with durable server acknowledgements. Never start new privileged activity on stale policy. See [Resilience and peer assistance](../02_Architecture/RESILIENCE_AND_PEER_ASSIST.md).
